@@ -101,10 +101,68 @@ box = "%.4f,%.4f,%.4f,%.4f,%.4f,%.4f" % (*bmin, *bmax)
 print("  final crop box: %s" % box)
 print("  box size:       %.2f x %.2f x %.2f" % tuple(bmax - bmin))
 
-# World up: COLMAP cameras look down +Z with +Y pointing down the image, so the
+# World up, in two steps.
+#
+# The seed: COLMAP cameras look down +Z with +Y pointing down the image, so the
 # average camera-Y in world coordinates is roughly "down" for a handheld capture.
 down = np.mean([R.T @ np.array([0.0, 1.0, 0.0]) for _, _, R, _, _ in imgs], axis=0)
-up = -down / max(np.linalg.norm(down), 1e-9)
+up_seed = -down / max(np.linalg.norm(down), 1e-9)
+up = up_seed
+
+# The refinement: the seed is only as level as the way the phone was held, and
+# here it was out by 6 degrees. That is invisible head-on but reads as a tilted
+# horizon once the viewer orbits 90 degrees, because a pitch error becomes a
+# roll error. The floor and ceiling are the real reference: project the sparse
+# points onto a candidate up and the true vertical is the one that collapses
+# those flat surfaces into the tallest, narrowest peaks. Maximise that
+# concentration with a coarse-to-fine search around the seed.
+if npoints > 5000:
+    core = pts[np.linalg.norm(pts - np.median(pts, axis=0), axis=1) < diag * 1.5]
+
+    def levelness(v):
+        """Concentration of point heights along v. Higher = flatter floor."""
+        h = core @ v
+        lo_h, hi_h = np.percentile(h, [1.0, 99.0])
+        if hi_h - lo_h < 1e-6:
+            return 0.0
+        counts, _ = np.histogram(h, bins=np.arange(lo_h, hi_h, 0.05))
+        total = counts.sum()
+        if total == 0:
+            return 0.0
+        return float(((counts / total) ** 2).sum())
+
+    def perpendicular_axes(v):
+        helper = np.array([1.0, 0.0, 0.0])
+        if abs(float(v @ helper)) > 0.9:
+            helper = np.array([0.0, 1.0, 0.0])
+        e1 = np.cross(v, helper)
+        e1 /= np.linalg.norm(e1)
+        return e1, np.cross(v, e1)
+
+    best_score, best_up = levelness(up_seed), up_seed
+    for radius_deg in (12.0, 4.0, 1.2, 0.35):
+        e1, e2 = perpendicular_axes(best_up)
+        anchor, found = best_up, (best_score, best_up)
+        for a in np.linspace(-radius_deg, radius_deg, 17):
+            for b in np.linspace(-radius_deg, radius_deg, 17):
+                cand = anchor + np.radians(a) * e1 + np.radians(b) * e2
+                cand /= np.linalg.norm(cand)
+                s = levelness(cand)
+                if s > found[0]:
+                    found = (s, cand)
+        best_score, best_up = found
+
+    drift = np.degrees(np.arccos(np.clip(float(best_up @ up_seed), -1.0, 1.0)))
+    gain = best_score / max(levelness(up_seed), 1e-9)
+    # A capture with no visible floor could send this anywhere, so only accept a
+    # refinement that stays near the seed and genuinely sharpens the peaks.
+    if drift <= 15.0 and gain > 1.05:
+        up = best_up
+        print("  world up:       refined %.2f deg off the camera-average, "
+              "floor peaks %.0f%% sharper" % (drift, (gain - 1.0) * 100.0))
+    else:
+        print("  world up:       kept camera-average (drift %.2f deg, gain %.2fx)"
+              % (drift, gain))
 
 # Initial camera: a real capture pose, so the viewer opens on a view that was
 # actually shot and definitely has splats in it - but chosen for how *open* it

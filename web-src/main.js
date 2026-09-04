@@ -24,6 +24,24 @@ const CONFIG = {
   orbitSpeed: 0.0042,   // radians per pixel dragged
   panSpeed: 0.0016,     // world units per pixel, per unit of pivot distance
   zoomSpeed: 0.0012,    // fraction of pivot distance per wheel unit
+
+  /** Orbit pivot. Everything — orbit radius, pan speed, zoom step — is
+   *  measured from the pivot, so a pivot stuck far across the room makes the
+   *  whole rig feel wrong. It gets re-anchored onto whatever is actually in
+   *  front of the camera; these bound the result. `fallbackPivot` is replaced
+   *  with a scene-sized value once the capture dimensions are known. */
+  minPivotDistance: 0.4,
+  fallbackPivot: 4,
+  /** Splats fainter than this don't count as a surface worth orbiting around. */
+  minRaycastOpacity: 0.35,
+  /** A new scroll gesture starts after this long without a wheel event. */
+  gestureGapMs: 250,
+
+  /** Middle-drag dolly: fraction of the step scale travelled per pixel, so a
+   *  full-height drag covers a bit under twice the distance to what you face. */
+  dollyDragSpeed: 0.002,
+  /** Closest the orbit may come to straight up or straight down, in radians. */
+  polarLimit: 0.09,
 };
 /* ========================================================================== */
 
@@ -86,7 +104,11 @@ const rig = {
     let theta = Math.atan2(offset.x, offset.z);
     let phi = Math.acos(THREE.MathUtils.clamp(offset.y / radius, -1, 1));
     theta -= dx * CONFIG.orbitSpeed;
-    phi = THREE.MathUtils.clamp(phi - dy * CONFIG.orbitSpeed, 0.02, Math.PI - 0.02);
+    // Stop short of the poles. Straight overhead the azimuth becomes
+    // hypersensitive and the view spins on the spot, which reads as the scene
+    // tipping over even though the camera itself never rolls.
+    phi = THREE.MathUtils.clamp(
+      phi - dy * CONFIG.orbitSpeed, CONFIG.polarLimit, Math.PI - CONFIG.polarLimit);
     offset.set(
       radius * Math.sin(phi) * Math.sin(theta),
       radius * Math.cos(phi),
@@ -108,12 +130,32 @@ const rig = {
     this.apply();
   },
 
-  /** Dolly towards/away from the pivot, keeping a sane minimum distance. */
+  /** How far one "unit" of movement should carry, given what you are looking
+   *  at. Never so small that motion crawls once the pivot is against the lens. */
+  stepScale() {
+    return Math.max(this.position.distanceTo(this.target), CONFIG.fallbackPivot * 0.25);
+  },
+
+  /** Push the camera along its own view axis, carrying the pivot with it.
+   *  Unlike zoom this has no floor — you can travel straight past whatever you
+   *  were orbiting instead of stalling on it. */
+  dolly(fraction) {
+    const forward = new THREE.Vector3().setFromMatrixColumn(camera.matrix, 2).negate();
+    this.translate(forward.multiplyScalar(fraction * this.stepScale()));
+  },
+
+  /** Draw the camera towards the pivot. Once it would close right up against
+   *  the pivot it hands over to dolly, so scrolling keeps moving you forward
+   *  rather than grinding to a halt a few centimetres short of the wall. */
   zoom(amount) {
     const offset = this.position.clone().sub(this.target);
-    const dist = THREE.MathUtils.clamp(
-      offset.length() * (1 + amount * CONFIG.zoomSpeed), 0.05, CONFIG.far * 0.5);
-    this.position.copy(this.target).add(offset.setLength(dist));
+    const wanted = offset.length() * (1 + amount * CONFIG.zoomSpeed);
+    if (wanted < CONFIG.minPivotDistance) {
+      this.dolly(-amount * CONFIG.zoomSpeed);
+      return;
+    }
+    this.position.copy(this.target)
+      .add(offset.setLength(Math.min(wanted, CONFIG.far * 0.5)));
     this.apply();
   },
 
@@ -126,16 +168,61 @@ const rig = {
 };
 
 /* -------------------------------------------------------------------------- *
+ *  Orbit pivot.
+ *
+ *  The pivot used to be fixed at the point the opening shot looked at, roughly
+ *  15 m away, so every drag swung the camera around a point far across the hall
+ *  instead of around what you were looking at. Spark can raycast the splat
+ *  itself, so the pivot is re-anchored onto real geometry whenever an
+ *  interaction starts — the behaviour you get in most 3D software.
+ *
+ *  The pivot is always placed on the camera's forward axis, at the depth of the
+ *  hit rather than at the hit point itself. That matters: the rig orients with
+ *  lookAt(target), so a pivot placed off-axis would spin the camera the moment
+ *  you touched it. On-axis, re-anchoring changes only how far away the pivot
+ *  is, never where the camera points.
+ * -------------------------------------------------------------------------- */
+const raycaster = new THREE.Raycaster();
+const SCREEN_CENTRE = new THREE.Vector2(0, 0);
+let splatMesh = null;
+
+function repivot() {
+  if (!splatMesh) return;
+  scene.updateMatrixWorld();
+  raycaster.setFromCamera(SCREEN_CENTRE, camera);
+
+  const hits = [];
+  splatMesh.raycast(raycaster, hits);
+
+  // Nothing in the middle of the view — looking out of a window, or off the
+  // end of the capture. Fall back to a distance that suits the scene size,
+  // which still beats leaving the pivot wherever it happened to be.
+  let distance = CONFIG.fallbackPivot;
+  if (hits.length) {
+    distance = Infinity;
+    for (const hit of hits) if (hit.distance < distance) distance = hit.distance;
+  }
+
+  const forward = new THREE.Vector3().setFromMatrixColumn(camera.matrix, 2).negate();
+  rig.target.copy(rig.position)
+    .addScaledVector(forward, Math.max(distance, CONFIG.minPivotDistance));
+}
+
+/* -------------------------------------------------------------------------- *
  *  Pointer input: mouse, trackpad and touch through one Pointer Events path.
  * -------------------------------------------------------------------------- */
 const pointers = new Map();
 let pinchDist = 0;
 
 canvas.addEventListener("pointerdown", (e) => {
+  // Middle button would otherwise start the browser's autoscroll.
+  if (e.button === 1) e.preventDefault();
   canvas.setPointerCapture(e.pointerId);
+  if (pointers.size === 0) repivot();     // once per drag, not per move
   pointers.set(e.pointerId, { x: e.clientX, y: e.clientY, button: e.button });
   if (pointers.size === 2) pinchDist = twoPointerDistance();
 });
+canvas.addEventListener("auxclick", (e) => e.preventDefault());
 
 canvas.addEventListener("pointermove", (e) => {
   const prev = pointers.get(e.pointerId);
@@ -151,6 +238,9 @@ canvas.addEventListener("pointermove", (e) => {
     if (pinchDist > 0) rig.zoom((pinchDist - d) * 2.2);
     pinchDist = d;
     rig.pan(dx / 2, dy / 2);
+  } else if (prev.button === 1) {
+    // Middle-drag: dolly. Push away from you to travel forwards.
+    rig.dolly(-dy * CONFIG.dollyDragSpeed);
   } else if (prev.button === 2 || e.shiftKey) {
     rig.pan(dx, dy);
   } else {
@@ -165,8 +255,14 @@ const endPointer = (e) => {
 canvas.addEventListener("pointerup", endPointer);
 canvas.addEventListener("pointercancel", endPointer);
 canvas.addEventListener("contextmenu", (e) => e.preventDefault());
+// Re-anchor once per scroll gesture rather than per event — a raycast is far
+// too expensive to run on every wheel tick.
+let lastWheel = 0;
 canvas.addEventListener("wheel", (e) => {
   e.preventDefault();
+  const now = performance.now();
+  if (now - lastWheel > CONFIG.gestureGapMs) repivot();
+  lastWheel = now;
   rig.zoom(e.deltaY);
 }, { passive: false });
 
@@ -182,7 +278,10 @@ const keys = new Set();
 addEventListener("keydown", (e) => {
   if (e.metaKey || e.ctrlKey || e.altKey) return;
   const k = e.key.toLowerCase();
-  if (k === "r") rig.reset();
+  if (k === "r") {
+    rig.reset();
+    repivot();      // home's stored pivot is the distant one from the capture
+  }
   if ("wasdqe".includes(k) || k === "shift") {
     keys.add(k);
     e.preventDefault();
@@ -240,6 +339,7 @@ async function frameScene() {
   // Scale movement and clipping to the real size of the capture.
   const span = Math.max(info.pathDiagonal || 4, 1);
   CONFIG.flySpeed = span * 0.12;
+  CONFIG.fallbackPivot = span * 0.25;
   camera.far = Math.max(CONFIG.far, span * 12);
   camera.near = Math.max(0.02, span * 0.002);
   camera.updateProjectionMatrix();
@@ -270,6 +370,9 @@ async function load() {
 
   const mesh = new SplatMesh({
     url: CONFIG.splatUrl,
+    // Lets the orbit pivot land on real geometry — see repivot().
+    raycastable: true,
+    minRaycastOpacity: CONFIG.minRaycastOpacity,
     onProgress: (e) => setProgress(e.loaded ?? 0, e.lengthComputable ? e.total : 0),
   });
   mesh.quaternion.copy(YDOWN_TO_YUP);
@@ -282,6 +385,13 @@ async function load() {
     fail("Scanningen kunde inte laddas. Sidan behöver serveras över HTTP (inte file://).");
     return;
   }
+
+  splatMesh = mesh;
+  // The raycast index is not ready the instant `initialized` resolves, so this
+  // first call usually falls back; retry on a later frame to open on the real
+  // geometry rather than on the scene-sized guess.
+  repivot();
+  requestAnimationFrame(() => requestAnimationFrame(repivot));
 
   bar.classList.remove("indeterminate");
   barFill.style.width = "100%";
