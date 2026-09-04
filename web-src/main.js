@@ -68,6 +68,10 @@ const CONFIG = {
     speedThin: 1700,
     minWidth: 0.2,
     maxWidth: 1.0,
+    /** Per-dab opacity once the brush has thinned right out. Very low on
+     *  purpose: dabs overlap roughly nine deep, so anything near 0.3 still
+     *  composites to solid black. 0.08 stacks up to about half. */
+    dryAlpha: 0.08,
 
     /** Dabs the stroke takes to open up to full width, and to lift off. */
     taperDabs: 7,
@@ -314,20 +318,38 @@ function makeDabTexture(size = 256) {
   return texture;
 }
 
-const inkMesh = new THREE.InstancedMesh(
-  new THREE.PlaneGeometry(1, 1),
-  new THREE.MeshBasicMaterial({
-    map: makeDabTexture(),
-    color: CONFIG.ink.color,
-    transparent: true,
-    // Splats do not write depth, so there is no usable depth buffer to test
-    // against. Draw the ink after them instead.
-    depthTest: false,
-    depthWrite: false,
-    toneMapped: false,
-  }),
-  CONFIG.ink.maxDabs,
-);
+const inkGeometry = new THREE.PlaneGeometry(1, 1);
+
+// Per-dab opacity. InstancedMesh has no such thing built in, so it rides along
+// as an instanced attribute and is multiplied into the fragment alpha.
+const inkAlpha = new THREE.InstancedBufferAttribute(
+  new Float32Array(CONFIG.ink.maxDabs), 1);
+inkAlpha.setUsage(THREE.DynamicDrawUsage);
+inkGeometry.setAttribute("aInkAlpha", inkAlpha);
+
+const inkMaterial = new THREE.MeshBasicMaterial({
+  map: makeDabTexture(),
+  color: CONFIG.ink.color,
+  transparent: true,
+  // Splats do not write depth, so there is no usable depth buffer to test
+  // against. Draw the ink after them instead.
+  depthTest: false,
+  depthWrite: false,
+  toneMapped: false,
+});
+inkMaterial.onBeforeCompile = (shader) => {
+  shader.vertexShader = shader.vertexShader
+    .replace("#include <common>",
+      "#include <common>\nattribute float aInkAlpha;\nvarying float vInkAlpha;")
+    .replace("#include <begin_vertex>",
+      "#include <begin_vertex>\n\tvInkAlpha = aInkAlpha;");
+  shader.fragmentShader = shader.fragmentShader
+    .replace("#include <common>", "#include <common>\nvarying float vInkAlpha;")
+    .replace("#include <map_fragment>",
+      "#include <map_fragment>\n\tdiffuseColor.a *= vInkAlpha;");
+};
+
+const inkMesh = new THREE.InstancedMesh(inkGeometry, inkMaterial, CONFIG.ink.maxDabs);
 inkMesh.count = 0;
 inkMesh.frustumCulled = false;   // instances are placed far from the origin
 inkMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
@@ -361,7 +383,6 @@ const stroke = {
   plane: new THREE.Plane(),
   quaternion: new THREE.Quaternion(),
   radius: 0.1,
-  last: new THREE.Vector3(),
   lastScreen: new THREE.Vector2(),
   lastTime: 0,
   direction: new THREE.Vector3(),
@@ -370,6 +391,9 @@ const stroke = {
   width: 1,
   carry: 0,
   dabs: 0,
+  /** Every sampled point of this stroke, so the path can be curved through
+   *  them rather than joined corner to corner. */
+  points: [],
 };
 let inkDabs = 0;
 let inkDirty = false;
@@ -378,6 +402,10 @@ const ndc = new THREE.Vector2();
 const UNIT_Z = new THREE.Vector3(0, 0, 1);
 const scratch = {
   point: new THREE.Vector3(),
+  curve: new THREE.Vector3(),
+  prev: new THREE.Vector3(),
+  dir: new THREE.Vector3(),
+  at: new THREE.Vector3(),
   scale: new THREE.Vector3(),
   quaternion: new THREE.Quaternion(),
   roll: new THREE.Quaternion(),
@@ -407,6 +435,13 @@ function dab(center, scale) {
   scratch.scale.set(size * CONFIG.ink.elongation, size, 1);
   scratch.matrix.compose(center, scratch.quaternion, scratch.scale);
   inkMesh.setMatrixAt(inkDabs, scratch.matrix);
+  // A thinned-out brush carries less ink, so the surface shows through it.
+  // Taper and lift-off ride on this too, since both come through `scale`.
+  const load = THREE.MathUtils.clamp(
+    (scale - CONFIG.ink.minWidth) / (CONFIG.ink.maxWidth - CONFIG.ink.minWidth), 0, 1);
+  inkAlpha.setX(inkDabs, THREE.MathUtils.clamp(
+    THREE.MathUtils.lerp(CONFIG.ink.dryAlpha, 1, Math.pow(load, 0.35)) *
+      (0.9 + Math.random() * 0.2), 0.05, 1));
   inkDabs += 1;
   inkMesh.count = inkDabs;
   inkDirty = true;
@@ -465,7 +500,7 @@ function beginStroke(clientX, clientY) {
   stroke.radius = visibleHeight * CONFIG.ink.brushSize * 0.5;
 
   stroke.active = true;
-  stroke.last.copy(point);
+  stroke.points = [point.clone()];
   stroke.lastScreen.set(clientX, clientY);
   stroke.lastTime = performance.now();
   stroke.direction.set(0, 0, 0);
@@ -480,6 +515,65 @@ function beginStroke(clientX, clientY) {
 function taperedWidth() {
   const open = Math.min(1, stroke.dabs / CONFIG.ink.taperDabs);
   return stroke.width * (0.4 + 0.6 * open) * (0.9 + Math.random() * 0.2);
+}
+
+/** A stroke point, with the ends clamped so the curve has controls to work
+ *  with at the very start and finish. */
+function strokePoint(i) {
+  const n = stroke.points.length;
+  return stroke.points[THREE.MathUtils.clamp(i, 0, n - 1)];
+}
+
+/** Catmull-Rom position along the span from point i to point i+1. Pointer
+ *  samples arrive far apart when the hand moves quickly; joining them with
+ *  straight lines is what made fast strokes come out as polygons. */
+function curveAt(i, t, out) {
+  const p0 = strokePoint(i - 1);
+  const p1 = strokePoint(i);
+  const p2 = strokePoint(i + 1);
+  const p3 = strokePoint(i + 2);
+  const t2 = t * t;
+  const t3 = t2 * t;
+  return out.set(0, 0, 0)
+    .addScaledVector(p0, -0.5 * t3 + t2 - 0.5 * t)
+    .addScaledVector(p1, 1.5 * t3 - 2.5 * t2 + 1)
+    .addScaledVector(p2, -1.5 * t3 + 2 * t2 + 0.5 * t)
+    .addScaledVector(p3, 0.5 * t3 - 0.5 * t2);
+}
+
+/** Lay dabs along the curved span from point i to point i+1, at even spacing,
+ *  carrying the remainder so spacing stays even across span boundaries. */
+function emitSpan(i) {
+  const chord = strokePoint(i).distanceTo(strokePoint(i + 1));
+  if (chord < 1e-7) return;
+
+  const step = Math.max(stroke.radius * CONFIG.ink.spacing * stroke.width, 1e-4);
+  // Walk the curve finely enough that its bend is followed, not chorded.
+  const sub = THREE.MathUtils.clamp(Math.ceil((chord / step) * 3), 6, 64);
+
+  curveAt(i, 0, scratch.prev);
+  for (let k = 1; k <= sub; k++) {
+    curveAt(i, k / sub, scratch.curve);
+    const length = scratch.prev.distanceTo(scratch.curve);
+    if (length > 1e-9) {
+      scratch.dir.copy(scratch.curve).sub(scratch.prev).divideScalar(length);
+      stroke.direction.copy(scratch.dir);
+
+      let travelled = step - stroke.carry;
+      while (travelled <= length) {
+        scratch.at.copy(scratch.prev).addScaledVector(scratch.dir, travelled);
+        const dry = stroke.width < 0.62 && Math.random() < CONFIG.ink.skipChance;
+        if (!dry) {
+          dab(scratch.at, taperedWidth());
+          if (Math.random() < CONFIG.ink.spatterChance) spatter(scratch.at);
+        }
+        stroke.dabs += 1;
+        travelled += step;
+      }
+      stroke.carry = length - (travelled - step);
+    }
+    scratch.prev.copy(scratch.curve);
+  }
 }
 
 function extendStroke(clientX, clientY) {
@@ -501,37 +595,26 @@ function extendStroke(clientX, clientY) {
   stroke.lastTime = now;
   stroke.lastScreen.set(clientX, clientY);
 
-  const segment = hit.clone().sub(stroke.last);
-  const length = segment.length();
-  if (length < 1e-6) return;
-  stroke.direction.copy(segment).normalize();
+  const last = stroke.points[stroke.points.length - 1];
+  if (last && last.distanceToSquared(hit) < 1e-10) return;
+  stroke.points.push(hit.clone());
 
-  // Walk the segment at fixed spacing, carrying the remainder into the next
-  // one so dab spacing stays even however coarse the pointer events are.
-  const step = Math.max(stroke.radius * CONFIG.ink.spacing * stroke.width, 1e-4);
-  let travelled = step - stroke.carry;
-  while (travelled <= length) {
-    const at = stroke.last.clone().addScaledVector(stroke.direction, travelled);
-    const dry = stroke.width < 0.62 && Math.random() < CONFIG.ink.skipChance;
-    if (!dry) {
-      dab(at, taperedWidth());
-      if (Math.random() < CONFIG.ink.spatterChance) spatter(at);
-    }
-    stroke.dabs += 1;
-    travelled += step;
-  }
-  stroke.carry = length - (travelled - step);
-  stroke.last.copy(hit);
+  // Draw the span that now has a neighbour on both sides. That costs one
+  // sample of lag and buys a curve that bends through the points.
+  if (stroke.points.length >= 3) emitSpan(stroke.points.length - 3);
 }
 
 /** Lift-off: a short tail that shrinks to nothing, the way a brush leaves. */
 function endStroke() {
   if (!stroke.active) return;
+  // The last span is still unpainted: extendStroke always runs one behind.
+  if (stroke.points.length >= 2) emitSpan(stroke.points.length - 2);
   if (stroke.dabs > 0 && stroke.direction.lengthSq() > 0) {
     const step = stroke.radius * CONFIG.ink.spacing * stroke.width;
+    const tip = strokePoint(stroke.points.length - 1);
     for (let i = 1; i <= CONFIG.ink.liftDabs; i++) {
       const fade = 1 - i / (CONFIG.ink.liftDabs + 1);
-      dab(stroke.last.clone().addScaledVector(stroke.direction, step * i),
+      dab(scratch.at.copy(tip).addScaledVector(stroke.direction, step * i),
         stroke.width * fade * fade * 0.8);
     }
   }
@@ -821,7 +904,7 @@ renderer.setAnimationLoop((now) => {
   // Batch the ink upload to one per frame rather than one per dab.
   if (inkDirty) {
     inkMesh.instanceMatrix.needsUpdate = true;
-    if (inkMesh.instanceColor) inkMesh.instanceColor.needsUpdate = true;
+    inkAlpha.needsUpdate = true;
     inkDirty = false;
   }
   renderer.render(scene, camera);
