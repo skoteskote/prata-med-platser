@@ -396,6 +396,7 @@ async function load() {
   bar.classList.remove("indeterminate");
   barFill.style.width = "100%";
   statusEl.textContent = "Klar";
+  canvas.classList.add("ready");   // fade the scene up out of the background
   loading.classList.add("done");
   setTimeout(() => loading.remove(), 700);
   hud.hidden = false;
