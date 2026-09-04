@@ -42,6 +42,32 @@ const CONFIG = {
   dollyDragSpeed: 0.002,
   /** Closest the orbit may come to straight up or straight down, in radians. */
   polarLimit: 0.09,
+
+  /** Ink. Held-key painting onto the scan — see the "Ink" section below. */
+  ink: {
+    /** Brush diameter as a fraction of the viewport height, so the brush keeps
+     *  a constant size on screen whatever depth you are painting at. */
+    brushSize: 0.05,
+    /** Dab spacing along the stroke, as a fraction of the brush radius.
+     *  Tight enough that the stamps read as one continuous mark. */
+    spacing: 0.28,
+    /** The ink itself. Each dab is a stamp of the brush texture, so darkness
+     *  builds up where a stroke doubles back, the way real ink does. */
+    color: new THREE.Color(0x121212),
+    /** Dabs the stroke takes to open up to full width, and to lift off. */
+    taperDabs: 5,
+    liftDabs: 4,
+    /** Screen speed, in px per event, at which the brush runs fully dry. */
+    dryAt: 95,
+    minWidth: 0.32,
+    maxWidth: 1.15,
+    /** Chance per dab of the fast brush skipping — the broken edge you get
+     *  when a real brush runs out of ink. */
+    skipChance: 0.2,
+    /** Chance per dab of throwing a few specks, as the logo's brush does. */
+    spatterChance: 0.022,
+    maxDabs: 24000,
+  },
 };
 /* ========================================================================== */
 
@@ -52,6 +78,8 @@ const barFill = document.getElementById("bar-fill");
 const statusEl = document.getElementById("status");
 const hud = document.getElementById("hud");
 const fpsEl = document.getElementById("fps");
+const inkToggle = document.getElementById("ink-toggle");
+const inkClear = document.getElementById("ink-clear");
 
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: false });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -209,6 +237,263 @@ function repivot() {
 }
 
 /* -------------------------------------------------------------------------- *
+ *  Ink.
+ *
+ *  The workshops paint ink on big white sheets, so the scan can be painted on
+ *  too. A splat has no surfaces to paint onto, but it can be *asked* where a
+ *  surface is: the same raycast that anchors the pivot returns a point on the
+ *  scan, and one cast at the start of a stroke fixes a plane through that point
+ *  facing the camera. The rest of the stroke is projected onto that plane,
+ *  which costs nothing and holds the ink at the depth of whatever you aimed at.
+ *  It is the sheet of paper held up against the room, which is the right
+ *  metaphor anyway — and it stays put in world space when you orbit away.
+ *
+ *  The ink itself is instanced brush stamps rather than gaussians. Pushing it
+ *  into a second SplatMesh would have composited more natively, but Spark will
+ *  not render a mesh whose PackedSplats started empty — it initialises, reports
+ *  a generator and no error, and draws nothing. Stamps also give a far better
+ *  brush: a real dab texture with a bitten edge beats a soft ellipsoid. They
+ *  carry no depth test, because splats never write depth for one to use.
+ * -------------------------------------------------------------------------- */
+/** One brush dab, drawn once onto a canvas: a loaded centre that falls away
+ *  softly, with the rim bitten into so it reads as bristles rather than a
+ *  circle. Every dab on the page is an instance of this. */
+function makeDabTexture(size = 128) {
+  const c = document.createElement("canvas");
+  c.width = c.height = size;
+  const g = c.getContext("2d");
+  const mid = size / 2;
+
+  const grad = g.createRadialGradient(mid, mid, 0, mid, mid, mid);
+  grad.addColorStop(0, "rgba(255,255,255,1)");
+  grad.addColorStop(0.58, "rgba(255,255,255,1)");
+  grad.addColorStop(0.8, "rgba(255,255,255,0.82)");
+  grad.addColorStop(1, "rgba(255,255,255,0)");
+  g.fillStyle = grad;
+  g.beginPath();
+  g.arc(mid, mid, mid, 0, Math.PI * 2);
+  g.fill();
+
+  // Bite irregular notches out of the edge.
+  g.globalCompositeOperation = "destination-out";
+  for (let i = 0; i < 16; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const at = mid * (0.74 + Math.random() * 0.4);
+    g.beginPath();
+    g.arc(mid + Math.cos(angle) * at, mid + Math.sin(angle) * at,
+      mid * (0.05 + Math.random() * 0.15), 0, Math.PI * 2);
+    g.fill();
+  }
+  const texture = new THREE.CanvasTexture(c);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  return texture;
+}
+
+const inkMesh = new THREE.InstancedMesh(
+  new THREE.PlaneGeometry(1, 1),
+  new THREE.MeshBasicMaterial({
+    map: makeDabTexture(),
+    transparent: true,
+    // Splats do not write depth, so there is no usable depth buffer to test
+    // against. Draw the ink after them instead.
+    depthTest: false,
+    depthWrite: false,
+    toneMapped: false,
+  }),
+  CONFIG.ink.maxDabs,
+);
+inkMesh.count = 0;
+inkMesh.frustumCulled = false;   // instances are placed far from the origin
+inkMesh.renderOrder = 10;
+inkMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+scene.add(inkMesh);              // authored in world space, so no transform
+
+const stroke = {
+  active: false,
+  plane: new THREE.Plane(),
+  quaternion: new THREE.Quaternion(),
+  radius: 0.1,
+  last: new THREE.Vector3(),
+  lastScreen: new THREE.Vector2(),
+  direction: new THREE.Vector3(),
+  width: 1,
+  carry: 0,
+  dabs: 0,
+};
+let inkDabs = 0;
+let inkDirty = false;
+
+const ndc = new THREE.Vector2();
+const UNIT_Z = new THREE.Vector3(0, 0, 1);
+const scratch = {
+  point: new THREE.Vector3(),
+  scale: new THREE.Vector3(),
+  quaternion: new THREE.Quaternion(),
+  roll: new THREE.Quaternion(),
+  matrix: new THREE.Matrix4(),
+  color: new THREE.Color(),
+};
+
+function toNdc(clientX, clientY) {
+  const r = canvas.getBoundingClientRect();
+  ndc.set(((clientX - r.left) / r.width) * 2 - 1, -((clientY - r.top) / r.height) * 2 + 1);
+  return ndc;
+}
+
+/** Drop one gaussian dab. `scale` is a multiple of the stroke's brush radius. */
+function dab(center, scale) {
+  if (inkDabs >= CONFIG.ink.maxDabs) return;
+  const size = Math.max(stroke.radius * scale, 1e-4) * 2;
+  // Spin each dab so repeated stamps of one texture never read as a pattern.
+  scratch.roll.setFromAxisAngle(UNIT_Z, Math.random() * Math.PI * 2);
+  scratch.quaternion.copy(stroke.quaternion).multiply(scratch.roll);
+  scratch.scale.set(size, size, 1);
+  scratch.matrix.compose(center, scratch.quaternion, scratch.scale);
+  inkMesh.setMatrixAt(inkDabs, scratch.matrix);
+  // Vary the load so the stroke has the density mottling of real ink.
+  scratch.color.copy(CONFIG.ink.color)
+    .multiplyScalar(0.7 + Math.random() * 0.9);
+  inkMesh.setColorAt(inkDabs, scratch.color);
+  inkDabs += 1;
+  inkMesh.count = inkDabs;
+  inkDirty = true;
+}
+
+/** A few specks thrown off the brush, in the plane of the stroke. */
+function spatter(center) {
+  const right = new THREE.Vector3().setFromMatrixColumn(camera.matrix, 0);
+  const up = new THREE.Vector3().setFromMatrixColumn(camera.matrix, 1);
+  for (let i = 0, n = 1 + Math.floor(Math.random() * 3); i < n; i++) {
+    const spread = stroke.radius * (1.4 + Math.random() * 3.2);
+    const a = Math.random() * Math.PI * 2;
+    dab(center.clone()
+      .addScaledVector(right, Math.cos(a) * spread)
+      .addScaledVector(up, Math.sin(a) * spread),
+      0.1 + Math.random() * 0.2);
+  }
+}
+
+function beginStroke(clientX, clientY) {
+  // Where is the surface? One raycast, at the depth the brush will work at.
+  let point = null;
+  if (splatMesh) {
+    scene.updateMatrixWorld();
+    raycaster.setFromCamera(toNdc(clientX, clientY), camera);
+    const hits = [];
+    splatMesh.raycast(raycaster, hits);
+    for (const hit of hits) {
+      if (!point || hit.distance < point.distance) point = hit;
+    }
+    point = point ? point.point.clone() : null;
+  }
+
+  // The camera's +Z points back towards the viewer, so dabs laid out on this
+  // plane face you as you paint them.
+  const normal = new THREE.Vector3().setFromMatrixColumn(camera.matrix, 2).normalize();
+  if (!point) {
+    // Nothing under the cursor: paint on the pivot's depth instead, which is
+    // already anchored to something sensible.
+    point = camera.position.clone()
+      .addScaledVector(normal.clone().negate(), rig.position.distanceTo(rig.target));
+  }
+
+  const distance = camera.position.distanceTo(point);
+
+  stroke.plane.setFromNormalAndCoplanarPoint(normal, point);
+  stroke.quaternion.setFromUnitVectors(UNIT_Z, normal);
+  const visibleHeight = 2 * distance * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2);
+  stroke.radius = visibleHeight * CONFIG.ink.brushSize * 0.5;
+
+  stroke.active = true;
+  stroke.last.copy(point);
+  stroke.lastScreen.set(clientX, clientY);
+  stroke.direction.set(0, 0, 0);
+  stroke.width = 0.55;
+  stroke.carry = 0;
+  stroke.dabs = 0;
+  dab(point, taperedWidth());
+  updateInkUi();
+}
+
+/** Brush width for the next dab: speed-driven, opening up from a fine tip. */
+function taperedWidth() {
+  const open = Math.min(1, stroke.dabs / CONFIG.ink.taperDabs);
+  return stroke.width * (0.4 + 0.6 * open) * (0.9 + Math.random() * 0.2);
+}
+
+function extendStroke(clientX, clientY) {
+  if (!stroke.active) return;
+  raycaster.setFromCamera(toNdc(clientX, clientY), camera);
+  const hit = raycaster.ray.intersectPlane(stroke.plane, scratch.point);
+  if (!hit) return;                          // stroke has swung past the horizon
+
+  // A real brush thins out as it moves faster. Smoothed, or it flickers.
+  const speed = Math.hypot(clientX - stroke.lastScreen.x, clientY - stroke.lastScreen.y);
+  const wanted = THREE.MathUtils.clamp(
+    CONFIG.ink.maxWidth - speed / CONFIG.ink.dryAt,
+    CONFIG.ink.minWidth, CONFIG.ink.maxWidth);
+  stroke.width += (wanted - stroke.width) * 0.35;
+  stroke.lastScreen.set(clientX, clientY);
+
+  const segment = hit.clone().sub(stroke.last);
+  const length = segment.length();
+  if (length < 1e-6) return;
+  stroke.direction.copy(segment).normalize();
+
+  // Walk the segment at fixed spacing, carrying the remainder into the next
+  // one so dab spacing stays even however coarse the pointer events are.
+  const step = Math.max(stroke.radius * CONFIG.ink.spacing * stroke.width, 1e-4);
+  let travelled = step - stroke.carry;
+  while (travelled <= length) {
+    const at = stroke.last.clone().addScaledVector(stroke.direction, travelled);
+    const dry = stroke.width < 0.62 && Math.random() < CONFIG.ink.skipChance;
+    if (!dry) {
+      dab(at, taperedWidth());
+      if (Math.random() < CONFIG.ink.spatterChance) spatter(at);
+    }
+    stroke.dabs += 1;
+    travelled += step;
+  }
+  stroke.carry = length - (travelled - step);
+  stroke.last.copy(hit);
+}
+
+/** Lift-off: a short tail that shrinks to nothing, the way a brush leaves. */
+function endStroke() {
+  if (!stroke.active) return;
+  if (stroke.dabs > 0 && stroke.direction.lengthSq() > 0) {
+    const step = stroke.radius * CONFIG.ink.spacing * stroke.width;
+    for (let i = 1; i <= CONFIG.ink.liftDabs; i++) {
+      const fade = 1 - i / (CONFIG.ink.liftDabs + 1);
+      dab(stroke.last.clone().addScaledVector(stroke.direction, step * i),
+        stroke.width * fade * fade * 0.8);
+    }
+  }
+  stroke.active = false;
+  updateInkUi();
+}
+
+function clearInk() {
+  inkDabs = 0;
+  inkMesh.count = 0;
+  inkDirty = true;
+  updateInkUi();
+}
+
+/* Painting is a held-key mode so it can never fight with navigation. Touch has
+ * no keyboard, so there it becomes a toggle — the only extra control, and it
+ * only exists on devices that need it. */
+let paintKeyHeld = false;
+let paintToggled = false;
+const painting = () => paintKeyHeld || paintToggled;
+
+function updateInkUi() {
+  canvas.classList.toggle("painting", painting());
+  inkClear.hidden = inkDabs === 0;
+  inkToggle.setAttribute("aria-pressed", String(paintToggled));
+}
+
+/* -------------------------------------------------------------------------- *
  *  Pointer input: mouse, trackpad and touch through one Pointer Events path.
  * -------------------------------------------------------------------------- */
 const pointers = new Map();
@@ -218,6 +503,14 @@ canvas.addEventListener("pointerdown", (e) => {
   // Middle button would otherwise start the browser's autoscroll.
   if (e.button === 1) e.preventDefault();
   canvas.setPointerCapture(e.pointerId);
+
+  // Painting takes the drag entirely, so it can never fight the camera.
+  if (painting() && pointers.size === 0 && !stroke.active && e.button === 0) {
+    e.preventDefault();
+    beginStroke(e.clientX, e.clientY);
+    return;
+  }
+
   if (pointers.size === 0) repivot();     // once per drag, not per move
   pointers.set(e.pointerId, { x: e.clientX, y: e.clientY, button: e.button });
   if (pointers.size === 2) pinchDist = twoPointerDistance();
@@ -225,6 +518,10 @@ canvas.addEventListener("pointerdown", (e) => {
 canvas.addEventListener("auxclick", (e) => e.preventDefault());
 
 canvas.addEventListener("pointermove", (e) => {
+  if (stroke.active) {
+    extendStroke(e.clientX, e.clientY);
+    return;
+  }
   const prev = pointers.get(e.pointerId);
   if (!prev) return;
   const dx = e.clientX - prev.x;
@@ -249,6 +546,7 @@ canvas.addEventListener("pointermove", (e) => {
 });
 
 const endPointer = (e) => {
+  if (stroke.active) endStroke();
   pointers.delete(e.pointerId);
   if (pointers.size < 2) pinchDist = 0;
 };
@@ -277,6 +575,18 @@ function twoPointerDistance() {
 const keys = new Set();
 addEventListener("keydown", (e) => {
   if (e.metaKey || e.ctrlKey || e.altKey) return;
+
+  // Hold space to paint. Held, not toggled, so you drop straight back into
+  // navigating the moment you let go.
+  if (e.code === "Space") {
+    e.preventDefault();
+    if (!paintKeyHeld) {
+      paintKeyHeld = true;
+      updateInkUi();
+    }
+    return;
+  }
+
   const k = e.key.toLowerCase();
   if (k === "r") {
     rig.reset();
@@ -287,8 +597,29 @@ addEventListener("keydown", (e) => {
     e.preventDefault();
   }
 });
-addEventListener("keyup", (e) => keys.delete(e.key.toLowerCase()));
-addEventListener("blur", () => keys.clear());
+
+addEventListener("keyup", (e) => {
+  if (e.code === "Space") {
+    paintKeyHeld = false;
+    if (stroke.active) endStroke();
+    updateInkUi();
+    return;
+  }
+  keys.delete(e.key.toLowerCase());
+});
+
+addEventListener("blur", () => {
+  keys.clear();
+  paintKeyHeld = false;
+  if (stroke.active) endStroke();
+  updateInkUi();
+});
+
+inkToggle.addEventListener("click", () => {
+  paintToggled = !paintToggled;
+  updateInkUi();
+});
+inkClear.addEventListener("click", clearInk);
 
 function fly(dt) {
   const forwardInput = (keys.has("w") ? 1 : 0) - (keys.has("s") ? 1 : 0);
@@ -421,6 +752,12 @@ renderer.setAnimationLoop((now) => {
   const dt = Math.min((now - last) / 1000, 0.1);
   last = now;
   fly(dt);
+  // Batch the ink upload to one per frame rather than one per dab.
+  if (inkDirty) {
+    inkMesh.instanceMatrix.needsUpdate = true;
+    if (inkMesh.instanceColor) inkMesh.instanceColor.needsUpdate = true;
+    inkDirty = false;
+  }
   renderer.render(scene, camera);
 
   if (++frames >= 30) {

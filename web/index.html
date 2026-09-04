@@ -192,13 +192,20 @@
 
 <!-- ---------- viewer chrome ---------------------------------------------- -->
 <div id="hud" hidden>
-  <button id="help-toggle" type="button" aria-expanded="false" aria-controls="help">Kontroller</button>
+  <div id="hud-row">
+    <button id="help-toggle" type="button" aria-expanded="false" aria-controls="help">Kontroller</button>
+    <!-- Touch has no keyboard to hold, so there painting becomes a toggle.
+         Hidden on anything with a real pointer. -->
+    <button id="ink-toggle" type="button" aria-pressed="false">Bläck</button>
+    <button id="ink-clear" type="button" hidden>Rensa</button>
+  </div>
   <div id="help" hidden>
     <dl>
       <dt>Dra</dt><dd>rotera</dd>
       <dt>Högerdra / två fingrar</dt><dd>panorera</dd>
       <dt>Rulla / nyp</dt><dd>zooma</dd>
       <dt>Mittdrag</dt><dd>dolly in och ut</dd>
+      <dt>Mellanslag + dra</dt><dd>måla med bläck</dd>
       <dt>W A S D</dt><dd>flyg</dd>
       <dt>Q E</dt><dd>ned / upp</dd>
       <dt>Skift</dt><dd>snabbare</dd>

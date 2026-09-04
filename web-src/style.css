@@ -396,7 +396,8 @@ body[data-route="om"] #hud:hover,
 body[data-route="schema"] #hud:hover { opacity: 1; }
 
 /* Same outline pill as the Kontakt button: transparent until you touch it. */
-#help-toggle {
+#help-toggle,
+#ink-toggle {
   pointer-events: auto;
   font-family: inherit;
   font-size: 0.86rem;
@@ -411,10 +412,46 @@ body[data-route="schema"] #hud:hover { opacity: 1; }
   transition: background 0.22s var(--ease), color 0.22s var(--ease);
 }
 #help-toggle:hover,
+#ink-toggle:hover,
 #help-toggle[aria-expanded="true"] {
   background: var(--ink);
   color: var(--bg);
 }
+
+#hud-row {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+/* Painting is a held key on anything with a real pointer, so this toggle only
+   exists where there is no keyboard to hold. */
+#ink-toggle { display: none; }
+@media (pointer: coarse) {
+  #ink-toggle { display: inline-block; }
+}
+#ink-toggle[aria-pressed="true"] {
+  background: var(--ink);
+  color: var(--bg);
+}
+
+/* Only appears once there is ink to get rid of. */
+#ink-clear {
+  pointer-events: auto;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--ink-soft);
+  background: none;
+  border: 0;
+  padding: 0.44rem 0.3rem;
+  cursor: pointer;
+  transition: color 0.2s var(--ease);
+}
+#ink-clear:hover { color: var(--ink); }
+#ink-clear[hidden] { display: none; }
+
+#view.painting { cursor: crosshair; }
 
 #help {
   pointer-events: auto;
