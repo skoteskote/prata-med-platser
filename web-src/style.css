@@ -36,8 +36,10 @@
   --ink-faint: rgba(20, 20, 20, 0.15);
   --ink-hairline: rgba(20, 20, 20, 0.1);
 
-  /* How much of the page background is washed over the scan. */
-  --veil: 0.3;
+  /* How much of the page background is washed over the *whole* canvas, ink
+     included. The start page's gentler fade of the scan alone is done inside
+     the render instead (CONFIG.scanFade), so ink stays black there. */
+  --veil: 0;
 
   --sans: "DM Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
     Helvetica, Arial, sans-serif;
@@ -97,9 +99,10 @@ a { color: inherit; }
   transition: opacity 0.6s var(--ease);
 }
 
-/* Text pages: fade the scan well back, but never all the way out. */
+/* Text pages: fade the scan well back, but never all the way out. Here the
+   ink should recede with it, so this one does cover the canvas entirely. */
 body[data-route="om"],
-body[data-route="schema"] { --veil: 0.9; }
+body[data-route="schema"] { --veil: 0.86; }
 
 /* --------------------------------------------------------------------------
    Header

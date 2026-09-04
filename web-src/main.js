@@ -43,29 +43,40 @@ const CONFIG = {
   /** Closest the orbit may come to straight up or straight down, in radians. */
   polarLimit: 0.09,
 
+  /** How far the scan is washed back on the start page. Applied inside the
+   *  render, under the ink, so painting stays pure black on top of it. */
+  scanFade: 0.3,
+
   /** Ink. Held-key painting onto the scan — see the "Ink" section below. */
   ink: {
     /** Brush diameter as a fraction of the viewport height, so the brush keeps
      *  a constant size on screen whatever depth you are painting at. */
-    brushSize: 0.05,
+    brushSize: 0.055,
     /** Dab spacing along the stroke, as a fraction of the brush radius.
      *  Tight enough that the stamps read as one continuous mark. */
-    spacing: 0.28,
-    /** The ink itself. Each dab is a stamp of the brush texture, so darkness
-     *  builds up where a stroke doubles back, the way real ink does. */
-    color: new THREE.Color(0x121212),
+    spacing: 0.22,
+    /** Pure black. Tusch has no grey in it — any per-dab colour variation
+     *  immediately reads as spray rather than ink. */
+    color: new THREE.Color(0x000000),
+    /** Dabs are stretched along the direction of travel, so consecutive stamps
+     *  drag into each other instead of reading as a row of blots. */
+    elongation: 1.3,
+
+    /** Speed to width, in px per second: a brush loaded and moving slowly lays
+     *  down its full width, and thins out as it is drawn faster. */
+    speedFat: 140,
+    speedThin: 1700,
+    minWidth: 0.2,
+    maxWidth: 1.0,
+
     /** Dabs the stroke takes to open up to full width, and to lift off. */
-    taperDabs: 5,
+    taperDabs: 7,
     liftDabs: 4,
-    /** Screen speed, in px per event, at which the brush runs fully dry. */
-    dryAt: 95,
-    minWidth: 0.32,
-    maxWidth: 1.15,
     /** Chance per dab of the fast brush skipping — the broken edge you get
      *  when a real brush runs out of ink. */
-    skipChance: 0.2,
-    /** Chance per dab of throwing a few specks, as the logo's brush does. */
-    spatterChance: 0.022,
+    skipChance: 0.22,
+    /** Kept rare: specks are the one genuinely spray-like thing here. */
+    spatterChance: 0.004,
     maxDabs: 24000,
   },
 };
@@ -258,34 +269,48 @@ function repivot() {
 /** One brush dab, drawn once onto a canvas: a loaded centre that falls away
  *  softly, with the rim bitten into so it reads as bristles rather than a
  *  circle. Every dab on the page is an instance of this. */
-function makeDabTexture(size = 128) {
+function makeDabTexture(size = 256) {
   const c = document.createElement("canvas");
   c.width = c.height = size;
   const g = c.getContext("2d");
   const mid = size / 2;
 
+  // Hard almost to the rim. A soft gradient edge is what makes a stamp read as
+  // airbrush; a brush leaves a definite boundary with ink right up to it.
   const grad = g.createRadialGradient(mid, mid, 0, mid, mid, mid);
   grad.addColorStop(0, "rgba(255,255,255,1)");
-  grad.addColorStop(0.58, "rgba(255,255,255,1)");
-  grad.addColorStop(0.8, "rgba(255,255,255,0.82)");
+  grad.addColorStop(0.84, "rgba(255,255,255,1)");
+  grad.addColorStop(0.95, "rgba(255,255,255,0.88)");
   grad.addColorStop(1, "rgba(255,255,255,0)");
   g.fillStyle = grad;
-  g.beginPath();
-  g.arc(mid, mid, mid, 0, Math.PI * 2);
-  g.fill();
+  g.fillRect(0, 0, size, size);
 
-  // Bite irregular notches out of the edge.
+  // Bristle streaks, running along X — which is the direction of travel once
+  // the dab is oriented. Consecutive stamps share this texture and the same
+  // alignment, so the gaps line up into continuous dry-brush striations
+  // instead of averaging away into a solid blob.
   g.globalCompositeOperation = "destination-out";
-  for (let i = 0; i < 16; i++) {
-    const angle = Math.random() * Math.PI * 2;
-    const at = mid * (0.74 + Math.random() * 0.4);
+  g.lineCap = "round";
+  for (let i = 0; i < 6; i++) {
+    const y = mid + (Math.random() * 2 - 1) * mid * 0.8;
+    const x0 = Math.random() * size * 0.35;
+    const x1 = size - Math.random() * size * 0.35;
+    g.lineWidth = size * (0.004 + Math.random() * 0.013);
+    g.strokeStyle = `rgba(0,0,0,${0.75 + Math.random() * 0.25})`;
     g.beginPath();
-    g.arc(mid + Math.cos(angle) * at, mid + Math.sin(angle) * at,
-      mid * (0.05 + Math.random() * 0.15), 0, Math.PI * 2);
-    g.fill();
+    g.moveTo(x0, y);
+    g.quadraticCurveTo((x0 + x1) / 2, y + (Math.random() * 2 - 1) * size * 0.025, x1, y);
+    g.stroke();
   }
+
   const texture = new THREE.CanvasTexture(c);
   texture.colorSpace = THREE.SRGBColorSpace;
+  // No mipmaps. A dab draws far smaller on screen than this texture, and the
+  // averaged mip levels blend the bristle gaps into a uniform half-alpha haze
+  // — which is what was turning solid black ink into charcoal grey.
+  texture.generateMipmaps = false;
+  texture.minFilter = THREE.LinearFilter;
+  texture.magFilter = THREE.LinearFilter;
   return texture;
 }
 
@@ -293,6 +318,7 @@ const inkMesh = new THREE.InstancedMesh(
   new THREE.PlaneGeometry(1, 1),
   new THREE.MeshBasicMaterial({
     map: makeDabTexture(),
+    color: CONFIG.ink.color,
     transparent: true,
     // Splats do not write depth, so there is no usable depth buffer to test
     // against. Draw the ink after them instead.
@@ -304,9 +330,31 @@ const inkMesh = new THREE.InstancedMesh(
 );
 inkMesh.count = 0;
 inkMesh.frustumCulled = false;   // instances are placed far from the origin
-inkMesh.renderOrder = 10;
 inkMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-scene.add(inkMesh);              // authored in world space, so no transform
+
+// The wash that fades the scan lives here rather than in the DOM. As a layer
+// over the canvas it dimmed the ink along with everything else, and 30% of
+// off-white over black is exactly the charcoal grey the ink kept coming out.
+// Drawn between the scan and the ink, it fades only what is behind it.
+const fadeScene = new THREE.Scene();
+const fadeCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+const fadeMaterial = new THREE.MeshBasicMaterial({
+  color: new THREE.Color(CONFIG.backgroundColor),
+  transparent: true,
+  opacity: CONFIG.scanFade,
+  depthTest: false,
+  depthWrite: false,
+  toneMapped: false,
+});
+fadeScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), fadeMaterial));
+
+// The ink gets its own scene, drawn in a second pass over the finished frame.
+// Inside the main scene the splats were winning the draw order and blending
+// over it, which is what kept the ink a washed charcoal instead of black —
+// renderOrder does not help, because Spark draws its splats its own way.
+// Authored in world space, so the mesh itself needs no transform.
+const inkScene = new THREE.Scene();
+inkScene.add(inkMesh);
 
 const stroke = {
   active: false,
@@ -315,7 +363,10 @@ const stroke = {
   radius: 0.1,
   last: new THREE.Vector3(),
   lastScreen: new THREE.Vector2(),
+  lastTime: 0,
   direction: new THREE.Vector3(),
+  right: new THREE.Vector3(),
+  up: new THREE.Vector3(),
   width: 1,
   carry: 0,
   dabs: 0,
@@ -340,20 +391,22 @@ function toNdc(clientX, clientY) {
   return ndc;
 }
 
-/** Drop one gaussian dab. `scale` is a multiple of the stroke's brush radius. */
+/** The stroke's heading, as an angle in the plane's own axes. */
+function dabAngle() {
+  if (stroke.direction.lengthSq() < 1e-12) return 0;
+  return Math.atan2(stroke.direction.dot(stroke.up), stroke.direction.dot(stroke.right));
+}
+
+/** Stamp one brush dab. `scale` is a multiple of the stroke's brush radius. */
 function dab(center, scale) {
   if (inkDabs >= CONFIG.ink.maxDabs) return;
   const size = Math.max(stroke.radius * scale, 1e-4) * 2;
-  // Spin each dab so repeated stamps of one texture never read as a pattern.
-  scratch.roll.setFromAxisAngle(UNIT_Z, Math.random() * Math.PI * 2);
+  // Turn the dab so the texture's bristle streaks run along the stroke.
+  scratch.roll.setFromAxisAngle(UNIT_Z, dabAngle());
   scratch.quaternion.copy(stroke.quaternion).multiply(scratch.roll);
-  scratch.scale.set(size, size, 1);
+  scratch.scale.set(size * CONFIG.ink.elongation, size, 1);
   scratch.matrix.compose(center, scratch.quaternion, scratch.scale);
   inkMesh.setMatrixAt(inkDabs, scratch.matrix);
-  // Vary the load so the stroke has the density mottling of real ink.
-  scratch.color.copy(CONFIG.ink.color)
-    .multiplyScalar(0.7 + Math.random() * 0.9);
-  inkMesh.setColorAt(inkDabs, scratch.color);
   inkDabs += 1;
   inkMesh.count = inkDabs;
   inkDirty = true;
@@ -375,38 +428,46 @@ function spatter(center) {
 
 function beginStroke(clientX, clientY) {
   // Where is the surface? One raycast, at the depth the brush will work at.
+  raycaster.setFromCamera(toNdc(clientX, clientY), camera);
   let point = null;
   if (splatMesh) {
     scene.updateMatrixWorld();
-    raycaster.setFromCamera(toNdc(clientX, clientY), camera);
     const hits = [];
     splatMesh.raycast(raycaster, hits);
+    let nearest = null;
     for (const hit of hits) {
-      if (!point || hit.distance < point.distance) point = hit;
+      if (!nearest || hit.distance < nearest.distance) nearest = hit;
     }
-    point = point ? point.point.clone() : null;
+    if (nearest) point = nearest.point.clone();
+  }
+
+  // Nothing under the cursor — looking out of a window, or off the end of the
+  // capture. Fall back to the pivot's depth, but along the cursor's own ray.
+  // Using the centre of the view instead started the stroke mid-screen and
+  // dragged a diagonal across to wherever the brush had actually been put down.
+  if (!point) {
+    point = raycaster.ray.at(rig.position.distanceTo(rig.target), new THREE.Vector3());
   }
 
   // The camera's +Z points back towards the viewer, so dabs laid out on this
   // plane face you as you paint them.
   const normal = new THREE.Vector3().setFromMatrixColumn(camera.matrix, 2).normalize();
-  if (!point) {
-    // Nothing under the cursor: paint on the pivot's depth instead, which is
-    // already anchored to something sensible.
-    point = camera.position.clone()
-      .addScaledVector(normal.clone().negate(), rig.position.distanceTo(rig.target));
-  }
 
   const distance = camera.position.distanceTo(point);
 
   stroke.plane.setFromNormalAndCoplanarPoint(normal, point);
-  stroke.quaternion.setFromUnitVectors(UNIT_Z, normal);
+  // An explicit basis, so a dab can be rolled to face along the stroke.
+  stroke.right.setFromMatrixColumn(camera.matrix, 0).normalize();
+  stroke.up.setFromMatrixColumn(camera.matrix, 1).normalize();
+  scratch.matrix.makeBasis(stroke.right, stroke.up, normal);
+  stroke.quaternion.setFromRotationMatrix(scratch.matrix);
   const visibleHeight = 2 * distance * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2);
   stroke.radius = visibleHeight * CONFIG.ink.brushSize * 0.5;
 
   stroke.active = true;
   stroke.last.copy(point);
   stroke.lastScreen.set(clientX, clientY);
+  stroke.lastTime = performance.now();
   stroke.direction.set(0, 0, 0);
   stroke.width = 0.55;
   stroke.carry = 0;
@@ -427,12 +488,17 @@ function extendStroke(clientX, clientY) {
   const hit = raycaster.ray.intersectPlane(stroke.plane, scratch.point);
   if (!hit) return;                          // stroke has swung past the horizon
 
-  // A real brush thins out as it moves faster. Smoothed, or it flickers.
-  const speed = Math.hypot(clientX - stroke.lastScreen.x, clientY - stroke.lastScreen.y);
-  const wanted = THREE.MathUtils.clamp(
-    CONFIG.ink.maxWidth - speed / CONFIG.ink.dryAt,
-    CONFIG.ink.minWidth, CONFIG.ink.maxWidth);
-  stroke.width += (wanted - stroke.width) * 0.35;
+  // Slow and loaded lays down full width; drawn fast the brush thins out.
+  // Measured per second, because pointer event rate varies with the hardware.
+  const now = performance.now();
+  const speed = Math.hypot(clientX - stroke.lastScreen.x, clientY - stroke.lastScreen.y) /
+    Math.max(now - stroke.lastTime, 1) * 1000;
+  const t = THREE.MathUtils.clamp(
+    (speed - CONFIG.ink.speedFat) / (CONFIG.ink.speedThin - CONFIG.ink.speedFat), 0, 1);
+  const wanted = THREE.MathUtils.lerp(
+    CONFIG.ink.maxWidth, CONFIG.ink.minWidth, Math.pow(t, 0.65));
+  stroke.width += (wanted - stroke.width) * 0.3;
+  stroke.lastTime = now;
   stroke.lastScreen.set(clientX, clientY);
 
   const segment = hit.clone().sub(stroke.last);
@@ -759,6 +825,10 @@ renderer.setAnimationLoop((now) => {
     inkDirty = false;
   }
   renderer.render(scene, camera);
+  renderer.autoClear = false;
+  if (fadeMaterial.opacity > 0) renderer.render(fadeScene, fadeCamera);
+  if (inkMesh.count > 0) renderer.render(inkScene, camera);
+  renderer.autoClear = true;
 
   if (++frames >= 30) {
     fpsEl.textContent = `${Math.round((frames * 1000) / (now - fpsClock))} fps`;
