@@ -5,8 +5,8 @@ import { SparkRenderer, SplatMesh } from "@sparkjsdev/spark";
  *  CONFIGURATION — the things worth changing all live here.
  * ========================================================================== */
 const CONFIG = {
-  /** Viewer background colour. */
-  backgroundColor: "#12141a",
+  /** Viewer background colour — matches the off-white page background. */
+  backgroundColor: "#f4f2ec",
 
   /** Splat asset, relative to this page. */
   splatUrl: "./assets/scene.sog",
@@ -249,10 +249,10 @@ function setProgress(loaded, total) {
   if (total > 0) {
     bar.classList.remove("indeterminate");
     barFill.style.width = ((loaded / total) * 100).toFixed(1) + "%";
-    statusEl.textContent = `${fmtMB(loaded)} of ${fmtMB(total)}`;
+    statusEl.textContent = `${fmtMB(loaded)} av ${fmtMB(total)}`;
   } else {
     bar.classList.add("indeterminate");
-    statusEl.textContent = `${fmtMB(loaded)} downloaded`;
+    statusEl.textContent = `${fmtMB(loaded)} hämtat`;
   }
 }
 
@@ -266,7 +266,7 @@ function fail(message) {
 async function load() {
   await frameScene();
   bar.classList.add("indeterminate");
-  statusEl.textContent = "Downloading splat…";
+  statusEl.textContent = "Hämtar scanningen…";
 
   const mesh = new SplatMesh({
     url: CONFIG.splatUrl,
@@ -279,13 +279,13 @@ async function load() {
     await mesh.initialized;
   } catch (err) {
     console.error(err);
-    fail("Could not load the splat. Serve this directory over HTTP (not file://).");
+    fail("Scanningen kunde inte laddas. Sidan behöver serveras över HTTP (inte file://).");
     return;
   }
 
   bar.classList.remove("indeterminate");
   barFill.style.width = "100%";
-  statusEl.textContent = "Ready";
+  statusEl.textContent = "Klar";
   loading.classList.add("done");
   setTimeout(() => loading.remove(), 700);
   hud.hidden = false;
@@ -324,6 +324,53 @@ document.getElementById("help-toggle").addEventListener("click", (e) => {
   help.hidden = !help.hidden;
   e.currentTarget.setAttribute("aria-expanded", String(!help.hidden));
 });
+
+/* -------------------------------------------------------------------------- *
+ *  Routing. Hash-based on purpose: the site is served from a project subpath
+ *  on GitHub Pages, where real paths would need server-side rewrites.
+ *  The scan keeps rendering behind every page — only the wash over it changes,
+ *  which is driven off body[data-route] in the stylesheet.
+ * -------------------------------------------------------------------------- */
+const ROUTES = {
+  hem: "Prata med platser",
+  om: "Om projektet — Prata med platser",
+  schema: "Schema — Prata med platser",
+};
+
+const pagesEl = document.getElementById("pages");
+const navLinks = [...document.querySelectorAll(".nav-link")];
+
+function currentRoute() {
+  const name = location.hash.replace(/^#\/?/, "").trim();
+  return Object.hasOwn(ROUTES, name) && name !== "hem" ? name : "hem";
+}
+
+function applyRoute() {
+  const route = currentRoute();
+  document.body.dataset.route = route;
+  document.title = ROUTES[route];
+
+  for (const page of document.querySelectorAll(".page")) {
+    page.hidden = page.id !== `page-${route}`;
+  }
+  pagesEl.hidden = route === "hem";
+  if (route !== "hem") pagesEl.scrollTop = 0;
+
+  for (const link of navLinks) {
+    if (link.getAttribute("href") === `#/${route}`) {
+      link.setAttribute("aria-current", "page");
+    } else {
+      link.removeAttribute("aria-current");
+    }
+  }
+}
+
+addEventListener("hashchange", applyRoute);
+applyRoute();
+
+// The hint has done its job once you have actually moved the scan.
+const hint = document.getElementById("hint");
+canvas.addEventListener("pointerdown", () => hint.classList.add("gone"), { once: true });
 
 resize();
 rig.apply();

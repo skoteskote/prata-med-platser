@@ -40,9 +40,13 @@ say "total: $(human_size "$WEB")"
 # outside host. Bare https:// strings are not enough to judge - three.js is full
 # of XML namespace URIs passed to createElementNS and documentation links in
 # comments, neither of which touches the network. Look for real loads only.
+#
+# An <a href> is navigation the visitor chooses, not a resource the page pulls
+# in, so outbound links (Instagram, mailto) are fine and must not trip this.
+# Only elements that actually fetch something are checked, plus JS-side loads.
 say ""
 say "+ offline check (no external loads in the built viewer)"
-HITS=$(grep -ohE "(src|href)=[\"'][^\"']*https?://[^\"']*|fetch\([\"']https?://|importScripts\([\"']https?://|new Worker\([\"']https?://|@import[^;]*https?://" \
+HITS=$(grep -ohE "<(script|link|img|source|video|audio|iframe|embed|object|track)\b[^>]*(src|href|data)=[\"'][^\"']*https?://[^\"']*|fetch\([\"']https?://|importScripts\([\"']https?://|new Worker\([\"']https?://|@import[^;]*https?://" \
   "$WEB/index.html" "$WEB/app/"*.js "$WEB/app/"*.css 2>/dev/null)
 if [ -n "$HITS" ]; then
   say "  FAIL - the viewer would load from the network:"
