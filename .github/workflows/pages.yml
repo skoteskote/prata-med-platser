@@ -1,0 +1,34 @@
+name: Deploy viewer to GitHub Pages
+
+# Publishes the contents of web/ (the built viewer + scene.sog).
+# Using a workflow rather than "deploy from branch" because Pages can only
+# serve / or /docs from a branch, and the deliverable lives in web/.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: web
+      - id: deployment
+        uses: actions/deploy-pages@v4

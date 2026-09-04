@@ -1,0 +1,14 @@
+=== stage 'train' started 2026-09-04T00:30:04Z ===
+dataset:     /Users/jakob/Downloads/Splat test/colmap/undistorted (918 undistorted images)
+splat cap:   2000000
+steps:       30000
+max res:     1920
+free disk:   7.0Gi
+
++ brush_app (streaming progress to logs/train.log)
+
+brush exited 0 after 3805s (63 min)
+final export: /Users/jakob/Downloads/Splat test/splat/export_30000.ply -> splat/scene.ply (450M)
+
+--- eval metrics reported by brush ---
+(brush emitted no psnr/ssim lines)

@@ -1,0 +1,52 @@
+=== stage 'colmap' started 2026-09-03T23:20:12Z ===
+images: 1200 in /Users/jakob/Downloads/Splat test/frames
+[skip] features already extracted
+  keypoints/image: 7722.0
+[skip] sequential matches already computed
+  after sequential: 3086 verified pairs
++ vocab_tree_matcher for loop closure (top 60 retrievals per image)
++ colmap vocab_tree_matcher --database_path /Users/jakob/Downloads/Splat test/colmap/database.db --VocabTreeMatching.vocab_tree_path /Users/jakob/Downloads/Splat test/tools/vocab_tree_faiss_4k.bin --VocabTreeMatching.num_images 60 --FeatureMatching.use_gpu 0
+  -> exit 0 after 1970s
+  pairs with matches: 69961, geometrically verified: 9973
++ mapper (this is the slow one)
++ colmap mapper --database_path /Users/jakob/Downloads/Splat test/colmap/database.db --image_path /Users/jakob/Downloads/Splat test/frames --output_path /Users/jakob/Downloads/Splat test/colmap/sparse --Mapper.abs_pose_min_num_inliers 20 --Mapper.filter_max_reproj_error 6 --Mapper.min_num_matches 12
+  -> exit 0 after 2080s
+
+reconstruction components: 8
+  0: 4 registered images
+  1: 918 registered images
+  2: 13 registered images
+  3: 16 registered images
+  4: 10 registered images
+  5: 10 registered images
+  6: 12 registered images
+  7: 12 registered images
+  largest model: /Users/jakob/Downloads/Splat test/colmap/sparse/1
+
+--- model_analyzer /Users/jakob/Downloads/Splat test/colmap/sparse/1 ---
+I20260904 02:27:46.309478 0x201e96240 model.cc:440] Rigs: 1
+I20260904 02:27:46.310259 0x201e96240 model.cc:441] Cameras: 1
+I20260904 02:27:46.310267 0x201e96240 model.cc:442] Frames: 918
+I20260904 02:27:46.310269 0x201e96240 model.cc:443] Registered frames: 918
+I20260904 02:27:46.310271 0x201e96240 model.cc:445] Images: 918
+I20260904 02:27:46.310273 0x201e96240 model.cc:446] Registered images: 918
+I20260904 02:27:46.310275 0x201e96240 model.cc:448] Points: 312177
+I20260904 02:27:46.310277 0x201e96240 model.cc:449] Observations: 1449316
+I20260904 02:27:46.310301 0x201e96240 model.cc:451] Mean track length: 4.642610
+I20260904 02:27:46.310316 0x201e96240 model.cc:453] Mean observations per image: 1578.775599
+I20260904 02:27:46.310330 0x201e96240 model.cc:456] Mean reprojection error: 0.911989px
+
+=============== STAGE 2 CHECKPOINT ===============
+ input images:            1200
+ registered:              918 (76.5%)      [threshold: >= 90%]
+ components:              8        [threshold: 1]
+ mean reprojection error: 0.911989 px  [threshold: <= 1.5 px]
+ FAIL: under 90% of images registered
+ FAIL: reconstruction split into 8 components
+ CHECKPOINT FAILED
+=================================================
+
++ image_undistorter
++ colmap image_undistorter --image_path /Users/jakob/Downloads/Splat test/frames --input_path /Users/jakob/Downloads/Splat test/colmap/sparse/1 --output_path /Users/jakob/Downloads/Splat test/colmap/undistorted --output_type COLMAP
+  -> exit 0 after 105s
+  undistorted set: 918 images, 986M

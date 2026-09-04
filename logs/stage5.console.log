@@ -1,0 +1,60 @@
+=== stage 'web' started 2026-09-04T01:43:16Z ===
++ fallback viewer (splat-transform's standalone single-file HTML export)
++ splat-transform -w /Users/jakob/Downloads/Splat test/splat/final.ply /Users/jakob/Downloads/Splat test/web-fallback/index.html
+splat-transform v2.7.1 (b42b60c)
+▸ [1/2] Input /Users/jakob/Downloads/Splat test/splat/final.ply
+  ▸ Reading
+    ▸ decoding [####################] 0.366s
+  · 2M gaussians · 3 SH bands · 449.4MB
+▸ [2/2] Output /Users/jakob/Downloads/Splat test/web-fallback/index.html
+  · 2M gaussians · 3 SH bands · 449.4MB
+  ▸ k-means [####################] 2m35.450s
+  ▸ Writing
+    · index.html (42.4MB)
+done in 2m39.651s  [peak 1.67GB]
+  -> exit 0 after 160s
+  web-fallback/index.html:  42M
+
++ building web/ with Vite (three.js + @sparkjsdev/spark bundled in)
++ npx vite build
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vite.config.js:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+vite v8.2.2 building client environment for production...
+transforming...
+✓ 9 modules transformed.
+rendering chunks...
+computing gzip size...
+../web/index.html         1.61 kB │ gzip:     0.85 kB
+../web/app/index.css      2.42 kB │ gzip:     1.01 kB
+../web/app/index.js   5,446.09 kB │ gzip: 1,901.84 kB
+
+[plugin builtin:vite-reporter] 
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 310ms
+  -> exit 0 after 1s
+
+web/ contents:
+  web/app/index.css
+  web/app/index.js
+  web/assets/poster.webp
+  web/assets/scene-info.json
+  web/assets/scene.sog
+  web/index.html
+
+total:  36M
+
++ offline check (no external URLs in the built viewer)
+  found external references:
+    http://www.w3.org/1999/xhtml`,e
+    http://www.w3.org/2000/svg
+    https://en.wikipedia.org/wiki/Invertible_matrix#Analytic_solution}.
+    https://en.wikipedia.org/wiki/X11_color_names#Color_name_chart}
+    https://jcgt.org/published/0007/04/01/
+    https://www.russellcottrell.com/photo/matrixCalculator.htm
+  (checked manually below - some are comments/licence URLs, not fetches)
+
+View it with:  cd web && python3 -m http.server 8000

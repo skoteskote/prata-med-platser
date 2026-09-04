@@ -1,0 +1,26 @@
+=== stage 'frames' started 2026-09-03T22:42:13Z ===
+input: /Users/jakob/Downloads/Splat test/input/IMG_0113.MOV (528M)
+  duration:    391.010000s
+  coded size:  1920x1080, rotation -90 -> extracted 1080x1920
+  codec:       hevc, pix_fmt yuv420p10le, 11730 frames
+  colour:      trc=arib-std-b67 primaries=bt2020 matrix=bt2020nc
+  frame rate:  r=30/1 avg=1173000/39101 ; variable frame rate: no (constant 29.9992 fps)
+
+  selection arithmetic:
+    11730 source frames / 1200 buckets = 9.8 source frames per bucket
+    average rate 3.07 fps over 391.010000s
+    one frame is taken per bucket, so there are no gaps in the sequence at all
+[skip] sharpness scores already computed
+
++ selecting the sharpest frame in each of 1200 buckets
++ /Users/jakob/Downloads/Splat test/.venv/bin/python /Users/jakob/Downloads/Splat test/scripts/pick_frames.py --scores /Users/jakob/Downloads/Splat test/logs/sharpness_allframes.csv --target 1200 --total-frames 11730 --out /Users/jakob/Downloads/Splat test/.stamps/selected_frames.txt --report /Users/jakob/Downloads/Splat test/logs/sharpness.csv
+buckets:            1200 over 11730 source frames (9.8 frames per bucket)
+selected sharpness: median 317.2  mean 442.9  min 7.1
+fixed-grid would be: median 243.8  mean 359.3  min 5.0
+improvement:        1.30x median sharpness
+  -> exit 0 after 0s
+
++ extracting 1200 frames at 1080x1920, HLG -> BT.709 tonemapped
+wrote 1200 frames (from 11730 source frames)
+  extracted 1200 frames in 279s (455M)
+  per-frame scores and bucket assignments: logs/sharpness.csv

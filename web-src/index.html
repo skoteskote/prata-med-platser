@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2312141a'/%3E%3Cg fill='none' stroke='%237cc4ff' stroke-width='2' stroke-linejoin='round'%3E%3Cpath d='M16 5l9 5v12l-9 5-9-5V10z'/%3E%3C/g%3E%3C/svg%3E">
+<title>Warehouse interior — Gaussian splat</title>
+<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+<canvas id="view"></canvas>
+
+<div id="loading">
+  <img id="poster" alt="" src="./assets/poster.webp" onerror="this.remove()">
+  <div id="loading-panel">
+    <h1>Warehouse interior</h1>
+    <p class="sub">3D Gaussian splat</p>
+    <div id="bar"><div id="bar-fill"></div></div>
+    <p class="status" id="status">Loading…</p>
+  </div>
+</div>
+
+<div id="hud" hidden>
+  <button id="help-toggle" type="button" aria-expanded="false">Controls</button>
+  <div id="help" hidden>
+    <dl>
+      <dt>Drag</dt><dd>orbit</dd>
+      <dt>Right-drag / two fingers</dt><dd>pan</dd>
+      <dt>Scroll / pinch</dt><dd>zoom</dd>
+      <dt>W A S D</dt><dd>fly</dd>
+      <dt>Q E</dt><dd>down / up</dd>
+      <dt>Shift</dt><dd>move faster</dd>
+      <dt>R</dt><dd>reset view</dd>
+    </dl>
+  </div>
+  <p id="fps"></p>
+</div>
+
+<noscript><p style="color:#fff;padding:2rem">This viewer needs JavaScript and WebGL2.</p></noscript>
+<script type="module" src="./main.js"></script>
+</body>
+</html>

@@ -1,0 +1,1085 @@
+==> Auto-updating Homebrew...
+Adjust how often this is run with `$HOMEBREW_AUTO_UPDATE_SECS` or disable with
+`$HOMEBREW_NO_AUTO_UPDATE=1`. Hide these hints with `$HOMEBREW_NO_ENV_HINTS=1` (see `man brew`).
+==> Downloading https://ghcr.io/v2/homebrew/core/portable-ruby/blobs/sha256:83a3ff85d83acf0e3dd8105de0fdb01da96b7c0eaf2dfaae2ba6500ec2ae4a64
+#=#=#                                                                          #                                                                          1.7%#############                                                             19.4%##############################                                            42.8%###################################################                       71.5%###################################################################       93.6%######################################################################## 100.0%
+==> Pouring portable-ruby-4.0.6.arm64_big_sur.bottle.tar.gz
+Warning: Failed to migrate /opt/homebrew/Caskroom/adoptopenjdk8/.metadata/8,292:b10/20231025082300.607/Casks/adoptopenjdk8.rb to JSON metadata: Refusing to load cask adoptopenjdk/openjdk/adoptopenjdk8 from untrusted tap adoptopenjdk/openjdk.
+Run `brew trust --cask adoptopenjdk/openjdk/adoptopenjdk8` or `brew trust adoptopenjdk/openjdk` to trust it.
+==> Auto-updated Homebrew!
+Updated 2 taps (homebrew/core and homebrew/cask).
+==> New Formulae
+adrs: Architectural Decision Record tool in Rust
+advai-cli: CLI for managing skills and external CLIs
+ai-cli: Generate images, video, audio, and text from the terminal
+amy: Nostr client from the Amethyst project
+apm: Dependency manager for AI agent configuration
+asar: SNES assembler for applying patches to ROM images or building ROMs
+atomgit-cli: Command-line interface for AtomGit
+auth0: Build, manage and test your Auth0 integrations from the command-line
+awww: Answer to your Wayland Wallpaper Woes
+b4n: Terminal user interface (TUI) for Kubernetes API written in Rust
+baml: Programming language for agents
+bashly: Bash command-line framework and CLI generator
+bbrew: TUI for managing Homebrew, Flatpak, and Mac App Store packages
+betterglobekey: Reworked Globe key for faster input source switching
+bismark: Bisulfite read mapper and methylation caller
+bittensor: SDK and command-line tool for the Bittensor network
+bluetuith: Cross-platform TUI bluetooth manager
+bomctl: Format-agnostic SBOM tooling for the stages between SBOM generation and analysis
+bracken: Bayesian estimation of species abundance from Kraken output
+checksec: Security feature auditing for ELF binaries and Linux kernels
+chopper: Filter and trim long-read sequencing data by quality and length
+civetweb: C/C++ embeddable web server with optional CGI, SSL and Lua support
+cliphist: Wayland clipboard manager with support for multimedia
+cuttlefish: Build compacted de Bruijn graphs from references or reads
+cve-bin-tool: Scans binaries and SBOMs for known vulnerabilities and prepares reports
+cyclonedx-npm: Creates CycloneDX Software Bill of Materials (SBOM) from npm projects
+deepline: CLI for Deepline data enrichment and durable plays
+deja-vu: Local searchable memory over the session histories of coding agents
+delly: Structural variant discovery by paired-end and split-read analysis
+diskwatch: Cross-platform disk diagnostics TUI
+dnsglobe: Global DNS propagation checker TUI
+droast: Opinionated Dockerfile linter
+dskditto: Ultra-fast duplicate file finder TUI/GUI
+epics-base: Experimental Physics and Industrial Control System
+esbmc: Efficient SMT-based context-bounded model checker for C, C++, and Python
+esbonio: Language server for working with Sphinx projects
+evnx: Comprehensive CLI tool for managing .env files
+faker: Python-based fake data generator
+fanficfare: Download fanfiction and original stories as e-books
+fastani: Fast whole-genome similarity (ANI) estimation
+ffmpeg@8: Play, record, convert, and stream select audio and video codecs
+filtlong: Quality filtering of long noisy DNA sequencing reads
+flite: Small fast and portable speech synthesis system
+fluxcd: Open and extensible continuous delivery solution for Kubernetes
+flyline: Supercharged Bash plugin replacement for readline
+fusesoc: Package manager and build abstraction tool for HDL code
+fx-agent: Tiny, open, embeddable, native coding agent
+gcx: CLI for managing Grafana Cloud resources
+gffcompare: Compare, merge and annotate GFF/GTF transcript files
+git-pkgs-brief: Tool that detects and reports a project's toolchain, configuration, and more
+git-pkgs-forge: Go library and CLI for working with git forges
+git-pkgs-proxy: Lightweight caching proxy for package registries
+gita: Manage multiple git repos with sanity
+glci: Run GitLab CI/CD pipelines locally
+go@1.26: Open source programming language to build simple/reliable/efficient software
+godns: Dynamic DNS client with multiple providers support
+gof5: F5 BIG-IP VPN client
+goimapnotify: Execute scripts on IMAP mailbox changes using IDLE
+gpk: TUI and CLI that unifies every package manager on the system
+gss-ntlmssp: NTLM authentication plugin for GSSAPI
+honker: SQLite message queue extension
+httpx2: HTTP client library for Python
+humanbound: Adversarial security testing engine, SDK, and CLI for AI agents
+hunk: Review-first terminal diff viewer for agent-authored changesets
+inshellisense: IDE style command-line auto complete
+jarl: Just another R linter
+jcode: AI coding agent harness for the terminal
+kata: Local-first, federated issue tracker for humans and coding agents
+kiesel: JavaScript engine written in Zig
+kotofetch: Small, configurable CLI that displays Japanese quotes in the terminal
+kubectl-klock: Kubectl plugin to render watch output in a more readable fashion
+lazy-tmux: Save all your tmux sessions and lazy restore them
+lazyrsync: Terminal UI for rsync, written in Rust
+leaves: Text-mode disk usage visualization utility
+lfk: Terminal user interface for navigating and managing Kubernetes clusters
+libjaylink: Provide interoperability with JLINK hardware
+librefang: Self-hostable operating system for autonomous AI agents
+libyang: YANG data modeling language library
+libyojimbo: Secure client/server network protocol library for multiplayer games
+lief-patchelf: Robust, modern reimplementation of patchelf based on the LIEF
+linecast: Weather, tides, the sun, the moon, and maps, drawn for the terminal
+livebook-cli: Code notebooks for Elixir developers
+lld@22: LLVM Project Linker
+lldb: Next generation, high-performance debugger
+llvm@22: Next-gen compiler infrastructure
+lunarr: Self-hosted media streaming server and Plex alternative for movies and TV
+mcpsnoop: Transparent proxy and TUI for debugging MCP traffic
+mktxp: Prometheus Exporter for Mikrotik RouterOS devices
+modal: Client library and CLI for Modal
+mosdepth: Fast BAM/CRAM depth calculation for WGS, exome, or targeted sequencing
+msdf-atlas-gen: Generator of multi-channel signed distance field atlases from fonts
+msdfgen: Multi-channel signed distance field generator
+mysql-client@9.7: Open source relational database management system
+mysql@9.7: Open source relational database management system
+nanoq: Minimal but speedy quality control and summaries of nanopore reads
+nats: Utility for NATS Server and JetStream administration
+near: Human-friendly console utility for interacting with NEAR Protocol
+netcode: Secure client/server protocol for multiplayer games built on top of UDP
+network-doctor: Network troubleshooting TUI
+nub: Fast TypeScript runtime and package manager that augments Node
+nullhub: Management console for the Null ecosystem
+obscura: Headless browser for AI agents and web scraping
+octl: Modern CLI for Outscale
+oh-my-reddit: Beautiful Reddit threads, live in your terminal
+open-code-review: AI-powered code review tool with deterministic pipelines and an LLM agent
+opencrabs: Autonomous, self-improving AI agent in a single Rust binary
+opencv@4: Open source computer vision library
+openkermit: Scriptable network and serial communication for UNIX and VMS
+openlore: Persistent architectural memory and structural cognition for AI coding agents
+ovh-ttyrec: Enhanced (but compatible) version of the classic ttyrec
+oxvg: Fastest SVG toolchain for optimisation, minification, linting, and actions
+pear: Peer-to-peer application runtime
+perlnavigator: Perl language server
+pixivbiu: Pixiv client. Easy to search, browse, and download artworks
+pixtuoid: Terminal pixel-art office for AI coding agents
+plink-ng: Whole-genome association analysis toolset (PLINK 2.0)
+podcast-dl: CLI for downloading and archiving podcasts
+prrte: PMIx Reference RunTime Environment
+pythia: Monte Carlo event generator
+qobine-tui: Tui player for Qobuz
+qobine-web: Server and web based player for Qobuz
+rammap: Extensible and performant aligner and read mapper
+rancher-machine: Machine management for a container-centric world
+rapid-mlx: Fast local AI engine for Apple Silicon with an OpenAI-compatible API
+rawtoaces: Utility for converting camera RAW image files to ACES
+readwise-cli: Command-line interface for Readwise and Reader
+reliable: Simple packet acknowledgement system for UDP-based protocols
+robotcode: Ultimate Robot Framework Toolset
+rocq-micromega-plugin: Micromega decision procedures plugin for the Rocq prover
+rtp2httpd: Multicast RTP/RTSP-to-HTTP converter with web player and status dashboard
+rumbledb: JSONiq and XQuery query engine on Apache Spark
+rust-wasm: Rust standard library and sysroot for WebAssembly targets
+sabiql: Fast, safe-by-design, driverless, Vim-first DB TUI with ER diagrams
+salmon: Transcript-level quantification from RNA-seq reads
+sbom-utility: Tool to validate, analyze, query and edit Software Bills of Materials (SBOMs)
+scrutineer: Security through scrutiny
+sdl3_sound: Abstract soundfile decoder
+seqwish: Alignment to variation graph inducer
+serialize: Single-header bitpacking serializer for C++ aimed at game networking
+shpool: Persistent shell session manager
+skillspector: Security scanner for AI agent skills
+slint-compiler: Compiler for the Slint UI markup language
+slint-cpp: C++ library and headers for the Slint UI toolkit
+smithery-cli: Install and list Model Context Protocol servers from Smithery
+soar: Fast, modern package manager for Static Binaries, Portable Formats and more
+solod: Strict subset of Go with transpiler that translates to regular C
+speedtest-go: CLI and Go API to Test Internet Speed using speedtest.net
+svlang: SystemVerilog compiler and language services
+systemd-lsp: Language server for systemd unit files
+tailcat: Netcat-like tool over Tailscale's data plane, without its control plane
+tele: Keyboard-first Telegram client for the terminal, written in Go
+tmux-fingers: Copy pasting in terminal with vimium/vimperator like hints
+tpack: Drop-in replacement for tmux-plugin-manager (tpm) with a TUI
+tracy-genomics: Basecalling, alignment, assembly and deconvolution of Sanger chromatograms
+treehouse: Manage worktrees without managing worktrees
+trim-galore: Quality and adapter trimming for FastQ sequencing reads
+tuicr: Code review TUI with vim keybindings
+tytanic: Test runner for Typst projects
+uavs3d: AVS3 decoder which supports AVS3-P2 baseline profile
+usbtree: Live USB device tree in your terminal
+utiluti: macOS command-line tool to work with default apps
+vapoursynth-vszip: VapourSynth Zig Image Process
+vi-sql: Terminal UI for SQL databases
+virglrenderer: VirGL virtual OpenGL renderer
+virtiofsd: Vhost-user virtio-fs device backend written in Rust
+vsview: Next-generation VapourSynth previewer
+webfont: Generator of fonts from SVG icons, with TTF encoding and WOFF/WOFF2 decoding
+wgsl-analyzer: Language server implementation for WGSL and WESL
+wild: Very fast linker for Linux
+worm-scraper: Scrape Worm, Ward, and Glow-worm web serials into EPUB ebooks
+woxi: Interpreter for a subset of the Wolfram Language
+xeve: Very fast Essential Video Encoder, MPEG-5 EVC (Essential Video Coding)
+xmedcon: Medical image conversion toolkit
+zero: Terminal coding agent you own
+zsh-patina: Blazingly fast Zsh syntax highlighter
+==> New Casks
+adrafinil: Keep your computer awake while AI coding agents are working
+afterglow: Classic After Dark screen savers emulator
+airstats: Menu bar system monitor
+airsync: Continuity tools for use with Android devices
+amethyst-nostr: Nostr client
+anarlog: AI notepad for meetings
+android-cli: Command-line interface for Android app development with AI agents
+android-performance-analyzer: Toolchain for profiling apps and games
+aphera: Raw photo editing software
+arcbox: Runtime for containers, Linux virtual machines, and AI agent sandboxes
+arm-performix: Performance analysis toolkit for Arm server and cloud environments
+aside: Web browser with built-in AI assistant
+atlas-app: Source control for coding agents
+atoll: Dynamic Island for the MacBook notch
+bb: IDE for running and orchestrating coding agents
+bettercmdtab@beta: Replacement for the built-in Cmd+Tab app switcher
+bifrost: Samsung firmware downloader
+billy: Invoice manager
+block-buzz: Workspace for humans and AI agents
+bramble: Password manager
+caldigit-usb-hub-support-driver: Apple SuperDrive, Apple Keyboard, and Improved iPhone/iPad Charging
+canario: Terminal emulator
+caskhub: Native GUI for Homebrew casks
+cate: Infinite zoomable canvas with editor, terminal, and browser panels
+changes: Git GUI
+channel-works: AI Business OS for customer support, analytics, collaboration, and marketing
+chatgpt-classic: OpenAI's previous ChatGPT desktop app
+clarc: Desktop client for Claude Code
+clarify: Autonomous CRM
+claude-status-bar: Menu bar status indicator for Claude Code
+clawd-on-desk: Desktop pet that reacts to AI coding agents
+cleanmymac-cli: Command-line interface for CleanMyMac
+cmtrace-open: Log viewer for ConfigMgr, Intune, and Windows diagnostic logs
+codexia: GUI and toolkit for Codex CLI and Claude Code
+crisp: Menu bar display manager: DDC brightness, HiDPI, presets, virtual displays
+davit: GUI for Apple's container CLI
+db-pro: Query, explore, and manage your databases with built-in AI
+degr: Temperature and clock screensaver
+diskboard: Disk benchmark and S.M.A.R.T. health monitor
+diversion: Cloud-native version control CLI and agent
+diversion-app: Desktop app for Diversion version control
+dnclient-server: Peer-to-peer VPN client daemon for managed nebula networks
+dockdoor-pro: Dock replacement with widgets, profiles and window previews
+dockspace: Widgets for your dock
+droppy: Drag and drop file shelf
+ds4-control: Menu bar pane for DeepSeek V4 via DwarfStar
+easydmg: One click DMG installs
+esphome-device-builder: Desktop app to create, edit and install your ESPHome device configurations
+font-annotationmono-nerd-font
+font-asap-sharp
+font-caacupe-one
+font-geomini
+font-googlesanscode-nerd-font
+font-hibur-mono
+font-jetendard
+font-luciole
+font-nevermind
+font-nexon-bazzi
+font-nexon-football-gothic
+font-nexon-kart-gothic
+font-nexon-lv1-gothic
+font-nexon-lv2-gothic
+font-nexon-maplestory
+font-paper-mono
+font-scoutie-sans
+font-suite
+font-valley-sans
+gamehub: Compatibility layer for running Windows and Steam games
+gamemaker@lts: Complete development tool for making 2D games
+geolibre: GIS platform
+ghost-downloader: Cross-platform multithreaded download manager
+gitcomet: Git GUI
+glean: Workplace search and AI assistant
+gnome: Menu bar GIF search and creation tool
+grok-bot: AI teammates that work across your apps and tools
+harper-desktop: Grammar checker for developers
+headroom: Reduce token usage for Claude Code and Codex
+hermes-desktop: Open-source desktop AI agent
+itermcompanion: Pairs iTerm2 with the iTerm2 Companion iPhone app
+itsypad: Tiny, fast scratchpad and clipboard manager
+juicy: Menu bar battery monitor with custom charge alerts and health tracking
+keeperdb: Database management tool for Postgres, MySQL, SQLite, MSSQL, Oracle, Redshift
+keychron-assistant: Companion app for Keychron Launcher's Quick Start feature
+keyty: Keyboard and mouse input visualizer
+kirocrew: Persistent AI development workspace with multi-agent support
+koe: Zero-GUI voice input tool
+koreader: Document viewer for e-ink devices
+leigod: Game network accelerator
+lemonade-server: Local LLM server with GPU and NPU acceleration
+libation: Audible audiobook manager and liberator
+libifd-cyberjack: Driver for REINER SCT cyberJack smart card readers
+linguax: Menu-bar utility for third-party mice with smooth scrolling and mapping
+lm-studio-bionic: AI agent for working with open models
+logseq-og: Privacy-first, open-source platform for knowledge sharing and management
+lumide: Agent-native code editor
+luna-display: Use your iPad as a wireless second display
+luna-secondary: Turn a computer or tablet into a second display
+mac-performance-monitor: Menu bar performance monitor with recorded history and analytics
+mac-sai: System cleaner, optimiser, and malware scanner
+macshot-offline: Screenshot and screen recording tool without upload integrations
+markdown-preview: Markdown previewer with bundled Quick Look extension
+markviewer: Minimal markdown editor
+meetingrecorder: Recorder for meetings capturing mic and system audio
+mend: Application security scanning CLI
+monet: Multi-engine mission control for coding agents
+mongrel: Database workbench with terminals, containers, Kubernetes, and API client
+moonfin: Media streaming client for Jellyfin and Emby
+motrix@beta: Open-source download manager
+muesli: Local-first dictation and meeting transcription
+muse-code: Interactive terminal coding agent
+nativ: Run AI models locally
+neodisk: Read-only disk space visualiser
+neon-vision-editor: Native code and text editor
+onexrayse: Cross-platform Xray-core client
+onit-sidekick: AI chat panel
+opendisplay: Second-display utility for iPhone and iPad over USB and Wi-Fi
+openhuman: Personal AI assistant with local memory and integrations
+openwhispr: Privacy-first voice-to-text dictation with AI agents
+orbit: Multiple Google accounts in isolated sessions in one window
+otty: Terminal emulator built for code agents
+owlocr: On-device OCR for screenshots, images, and PDFs
+pastebot@2: Workflow application to improve productivity
+perplexity: AI-powered answer engine with Personal Computer agent
+petdex: Desktop pet that reflects coding agent activity
+phosphene: Custom video wallpapers for the desktop and lock screen
+pique: Quick Look extension for syntax-highlighted file previews
+pixcake: AI photo editing software for commercial photography
+platinum-notes: Improve audio quality of music files
+pocket-bard: TTRPG ambient audio and sound effects
+prisma-access-browser: Secure enterprise browser with built-in threat and data protection
+proxybridge: Proxy client with per-application traffic routing rules
+quarkclouddrive: Cloud storage and file management platform
+raycast-glaze: Create desktop apps by chatting with AI
+redot: Multi-platform 2D and 3D game engine
+riverscript: AI platform for recording and transcribing system audio from any app
+roslynpad: C# editor and runner based on Roslyn
+sentry-cli: Command-line utility to interact with Sentry
+sessionwatcher: Menu bar monitor for AI coding assistant usage and limits
+siliconscope: System monitor for Apple Silicon with ANE, Media Engine and bandwidth tracking
+sina-finance: Stock market data and financial news platform
+sjmcl: Minecraft launcher built with the community
+skills-manager: Manage, sync, and organise AI agent skills across coding tools
+slashy: Email client for Gmail
+smallstepagent: Device identity and certificate management daemon
+snapzy: Native screenshots, recording, annotation, and editing from the menu bar
+snippety: Snippet manager & text expander
+sogouinput: Input method supporting full and double spelling
+sonarqube-cli: Code quality and security for terminal workflows, scripts, and AI agents
+space-rabbit: Removes animations when switching between Spaces
+spacejump: Menu bar utility to name and switch desktop Spaces
+subtitle-edit: Subtitle editor
+subtitle-studio: Offline AI subtitle generator
+switchy: Switch Magic Keyboard, Trackpad and Mouse between Macs
+tabularis: Lightweight database management tool
+tauritavern: SillyTavern-compatible native client
+tcp-viewer: Packet capture and inspection tool
+textream: Teleprompter that highlights scripts in real time as you speak
+thoughtdag: Visual workspace for editable LLM context graphs
+tickernotch: Tickers, news, weather and social counters beside the notch or in the menu bar
+tight-studio: Screen recorder and video editor
+tikz-editor: WYSIWYG editor for TikZ diagrams in LaTeX
+token-monitor: Monitor token usage, costs, and limits across AI coding tools
+tone3000: Amp modeling plug-in for Neural Amp Modeler captures and impulse responses
+toolhive-studio: Desktop application to install, manage, and run MCP servers
+triggerflo: Focus timer and Kanban board for tracking tasks
+uniclipboard: Cross-device clipboard syncing tool
+unity-cli: Command-line interface for Unity
+unity-hub@beta: Management tool for Unity
+unsloth: Desktop application for Unsloth Studio
+valkey-admin: Administration tool for Valkey clusters and standalone instances
+vicinae: Application launcher and command palette
+vorssaint: Menu bar toolkit with keep-awake, system monitor and volume mixer
+waku: Native desktop app for coding agents
+warp-agent-cli: Agentic development environment for command-line workflows
+willow-voice: AI-powered voice dictation and writing assistant
+work-louder-input: Keyboard configurator for Work Louder devices
+zcode: AI-assisted development environment
+zush: AI-powered file renamer and organiser
+
+You have 121 outdated formulae and 4 outdated casks installed.
+
+Warning: The following taps are not trusted:
+  adoptopenjdk/openjdk
+  aerugo/prelude
+
+Homebrew is currently ignoring formulae, casks and commands from these taps because tap trust is required.
+
+Prefer trusting only the specific formulae, casks or commands you need.
+Trust installed formulae from these taps with:
+  brew trust --formula aerugo/prelude/prelude
+Trust other specific casks and commands with:
+  brew trust --cask <user>/<tap>/<cask>
+  brew trust --command <user>/<tap>/<command>
+Whole-tap trust is broader and includes all current and future formulae,
+casks and commands from the listed taps. Trust whole taps with:
+  brew trust adoptopenjdk/openjdk aerugo/prelude
+Untap them with:
+  brew untap adoptopenjdk/openjdk aerugo/prelude
+To disable trust checks:
+  export HOMEBREW_NO_REQUIRE_TAP_TRUST=1
+This is not recommended and will be removed in a later release.
+For more information, see:
+  https://docs.brew.sh/Tap-Trust
+==> Downloading bottle manifests
+✔︎ Bottle Manifest colmap (4.1.1_3)
+==> Would install 1 formula:
+colmap
+==> Would install 44 dependencies for colmap:
+boost
+gflags
+glog
+eigen
+metis
+isl
+mpfr
+libmpc
+gcc
+libomp
+openblas
+suite-sparse
+hwloc
+tbb
+ceres-solver
+cgal
+faiss
+libaec
+hdf5
+flann
+glew
+abseil
+protobuf
+onnx
+re2
+onnxruntime
+sdl3
+fmt
+libraw
+minizip-ng
+pystring
+yaml-cpp
+zlib-ng-compat
+opencolorio
+pugixml
+python@3.14
+openimageio
+poselib
+dbus
+double-conversion
+json-c
+md4c
+qtbase
+qtsvg
+==> Would upgrade 32 dependencies for colmap:
+pkgconf
+dav1d
+mpg123
+lame
+libvmaf
+libvpx
+ca-certificates
+openssl@3
+opus
+sdl2-compat
+svt-av1
+x264
+x265
+ffmpeg
+imath
+jpeg-turbo
+highway
+libtiff
+little-cms2
+libdeflate
+openjph
+openexr
+jpeg-xl
+aom
+libde265
+libheif
+sqlite
+pcre2
+glib
+fontconfig
+graphite2
+harfbuzz
+==> Fetching downloads for: colmap
+✔︎ Bottle Manifest boost (1.92.0)
+✔︎ Bottle Manifest gflags (2.3.1)
+✔︎ Bottle Manifest glog (0.7.1)
+✔︎ Bottle Manifest eigen (5.0.1)
+✔︎ Bottle Manifest metis (5.1.0)
+✔︎ Bottle Manifest isl (0.28)
+✔︎ Bottle Manifest libmpc (1.4.1)
+✔︎ Bottle Manifest mpfr (4.2.2)
+✔︎ Bottle Manifest gcc (16.2.0)
+✔︎ Bottle glog (0.7.1)
+✔︎ Bottle gflags (2.3.1)
+✔︎ Bottle Manifest libomp (23.1.0)
+✔︎ Bottle Manifest hwloc (2.14.0)
+✔︎ Bottle Manifest openblas (0.3.34)
+✔︎ Bottle Manifest suite-sparse (7.14.0)
+✔︎ Bottle libmpc (1.4.1)
+✔︎ Bottle Manifest tbb (2023.1.0)
+✔︎ Bottle Manifest ceres-solver (2.2.0_6)
+✔︎ Bottle Manifest libaec (1.1.7)
+✔︎ Bottle Manifest faiss (1.15.0)
+✔︎ Bottle Manifest cgal (6.2)
+✔︎ Bottle Manifest pkgconf (3.0.6)
+✔︎ Bottle libomp (23.1.0)
+✔︎ Bottle libaec (1.1.7)
+✔︎ Bottle Manifest hdf5 (2.2.0)
+✔︎ Bottle Manifest flann (1.9.2_4)
+✔︎ Bottle mpfr (4.2.2)
+✔︎ Bottle Manifest glew (2.3.1)
+✔︎ Bottle Manifest abseil (20260817.0)
+✔︎ Bottle Manifest protobuf (36.0)
+✔︎ Bottle Manifest onnx (1.22.0_3)
+✔︎ Bottle pkgconf (3.0.6)
+✔︎ Bottle glew (2.3.1)
+✔︎ Bottle Manifest onnxruntime (1.29.0_2)
+✔︎ Bottle tbb (2023.1.0)
+✔︎ Bottle Manifest dav1d (1.5.4)
+✔︎ Bottle dav1d (1.5.4)
+✔︎ Bottle isl (0.28)
+✔︎ Bottle Manifest re2 (2025-11-05_2)
+✔︎ Bottle Manifest mpg123 (1.33.7)
+✔︎ Bottle Manifest lame (4.0)
+✔︎ Bottle Manifest libvmaf (3.2.0)
+✔︎ Bottle mpg123 (1.33.7)
+✔︎ Bottle Manifest libvpx (1.17.0)
+✔︎ Bottle Manifest ca-certificates (2026-08-13)
+✔︎ Bottle faiss (1.15.0)
+✔︎ Bottle lame (4.0)
+✔︎ Bottle re2 (2025-11-05_2)
+✔︎ Bottle ceres-solver (2.2.0_6)
+✔︎ Bottle Manifest openssl@3 (3.6.4)
+✔︎ Bottle Manifest opus (1.6.1)
+✔︎ Bottle ca-certificates (2026-08-13)
+✔︎ Bottle eigen (5.0.1)
+✔︎ Bottle metis (5.1.0)
+✔︎ Bottle Manifest sdl3 (3.4.16)
+✔︎ Bottle Manifest svt-av1 (4.2.0)
+✔︎ Bottle Manifest x264 (r3222)
+✔︎ Bottle onnx (1.22.0_3)
+✔︎ Bottle Manifest sdl2-compat (2.32.72)
+✔︎ Bottle Manifest x265 (4.3)
+✔︎ Bottle flann (1.9.2_4)
+✔︎ Bottle Manifest fmt (12.2.0)
+✔︎ Bottle opus (1.6.1)
+✔︎ Bottle Manifest ffmpeg (9.0.1_1)
+✔︎ Bottle Manifest imath (3.2.3)
+✔︎ Bottle Manifest jpeg-turbo (3.2.0)
+✔︎ Bottle Manifest highway (1.4.0)
+✔︎ Bottle libvpx (1.17.0)
+✔︎ Bottle onnxruntime (1.29.0_2)
+✔︎ Bottle fmt (12.2.0)
+✔︎ Bottle Manifest libtiff (4.7.2)
+✔︎ Bottle libvmaf (3.2.0)
+✔︎ Bottle imath (3.2.3)
+✔︎ Bottle sdl2-compat (2.32.72)
+✔︎ Bottle sdl3 (3.4.16)
+✔︎ Bottle Manifest little-cms2 (2.19.1)
+✔︎ Bottle jpeg-turbo (3.2.0)
+✔︎ Bottle Manifest libdeflate (1.26)
+✔︎ Bottle abseil (20260817.0)
+✔︎ Bottle x265 (4.3)
+✔︎ Bottle Manifest openjph (0.31.0)
+✔︎ Bottle Manifest openexr (3.4.15)
+✔︎ Bottle Manifest jpeg-xl (0.12.0)
+✔︎ Bottle libdeflate (1.26)
+✔︎ Bottle x264 (r3222)
+✔︎ Bottle svt-av1 (4.2.0)
+✔︎ Bottle Manifest aom (3.14.1)
+✔︎ Bottle Manifest libde265 (1.1.2)
+✔︎ Bottle highway (1.4.0)
+✔︎ Bottle Manifest minizip-ng (4.2.2)
+✔︎ Bottle little-cms2 (2.19.1)
+✔︎ Bottle Manifest libheif (1.23.3)
+✔︎ Bottle Manifest pystring (1.2.0)
+✔︎ Bottle Manifest yaml-cpp (0.9.0)
+✔︎ Bottle openjph (0.31.0)
+✔︎ Bottle Manifest zlib-ng-compat (2.3.3_1)
+✔︎ Bottle libde265 (1.1.2)
+✔︎ Bottle minizip-ng (4.2.2)
+✔︎ Bottle colmap (4.1.1_3)
+✔︎ Bottle pystring (1.2.0)
+✔︎ Bottle yaml-cpp (0.9.0)
+✔︎ Bottle Manifest opencolorio (2.5.2)
+✔︎ Bottle Manifest pugixml (1.16)
+✔︎ Bottle aom (3.14.1)
+✔︎ Bottle Manifest sqlite (3.53.4)
+✔︎ Bottle Manifest python@3.14 (3.14.7)
+✔︎ Bottle Manifest poselib (2.0.5)
+✔︎ Bottle Manifest openimageio (3.1.17.0)
+✔︎ Bottle Manifest dbus (1.16.2_1)
+✔︎ Bottle Manifest libraw (0.22.2)
+✔︎ Bottle zlib-ng-compat (2.3.3_1)
+✔︎ Bottle Manifest double-conversion (3.4.0)
+✔︎ Bottle Manifest pcre2 (10.48)
+✔︎ Bottle Manifest json-c (0.19)
+✔︎ Bottle pugixml (1.16)
+✔︎ Bottle libraw (0.22.2)
+✔︎ Bottle double-conversion (3.4.0)
+✔︎ Bottle Manifest glib (2.88.3)
+✔︎ Bottle sqlite (3.53.4)
+✔︎ Bottle Manifest fontconfig (2.18.3)
+✔︎ Bottle Manifest graphite2 (1.3.15)
+✔︎ Bottle json-c (0.19)
+✔︎ Bottle dbus (1.16.2_1)
+✔︎ Bottle openexr (3.4.15)
+✔︎ Bottle Manifest harfbuzz (14.4.0)
+✔︎ Bottle Manifest md4c (0.5.3)
+✔︎ Bottle libheif (1.23.3)
+✔︎ Bottle opencolorio (2.5.2)
+✔︎ Bottle graphite2 (1.3.15)
+✔︎ Bottle libtiff (4.7.2)
+✔︎ Bottle Manifest qtsvg (6.11.2)
+✔︎ Bottle md4c (0.5.3)
+✔︎ Bottle protobuf (36.0)
+✔︎ Bottle fontconfig (2.18.3)
+✔︎ Bottle poselib (2.0.5)
+✔︎ Bottle qtsvg (6.11.2)
+✔︎ Bottle pcre2 (10.48)
+✔︎ Bottle hwloc (2.14.0)
+✔︎ Bottle openimageio (3.1.17.0)
+✔︎ Bottle Manifest qtbase (6.11.2)
+✔︎ Bottle ffmpeg (9.0.1_1)
+✔︎ Bottle jpeg-xl (0.12.0)
+✔︎ Bottle cgal (6.2)
+✔︎ Bottle hdf5 (2.2.0)
+✔︎ Bottle openssl@3 (3.6.4)
+✔︎ Bottle harfbuzz (14.4.0)
+✔︎ Bottle glib (2.88.3)
+✔︎ Bottle qtbase (6.11.2)
+✔︎ Bottle suite-sparse (7.14.0)
+✔︎ Bottle openblas (0.3.34)
+✔︎ Bottle python@3.14 (3.14.7)
+✔︎ Bottle boost (1.92.0)
+✔︎ Bottle gcc (16.2.0)
+==> Installing dependencies for colmap: boost, gflags, glog, eigen, metis, isl, mpfr, libmpc, gcc, libomp, openblas, suite-sparse, hwloc, tbb, ceres-solver, cgal, faiss, libaec, pkgconf, hdf5, flann, glew, abseil, protobuf, onnx, re2, onnxruntime, dav1d, mpg123, lame, libvmaf, libvpx, ca-certificates, openssl@3, opus, sdl3, sdl2-compat, svt-av1, x264, x265, ffmpeg, fmt, jpeg-turbo, highway, libtiff, openjph, openexr, jpeg-xl, aom, libde265, libheif, libraw, minizip-ng, pystring, yaml-cpp, zlib-ng-compat, opencolorio, pugixml, sqlite, python@3.14, openimageio, poselib, dbus, double-conversion, json-c, glib, fontconfig, graphite2, harfbuzz, md4c, qtbase and qtsvg
+==> Installing colmap dependency: boost
+==> Pouring boost--1.92.0.arm64_sequoia.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/boost/1.92.0: 16,678 files, 357.6MB
+==> Installing colmap dependency: gflags
+==> Pouring gflags--2.3.1.arm64_sequoia.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/gflags/2.3.1: 27 files, 752.3KB
+==> Installing colmap dependency: glog
+==> Pouring glog--0.7.1.arm64_sequoia.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/glog/0.7.1: 25 files, 422KB
+==> Installing colmap dependency: eigen
+==> Pouring eigen--5.0.1.all.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/eigen/5.0.1: 615 files, 10.2MB
+==> Installing colmap dependency: metis
+==> Pouring metis--5.1.0.arm64_sequoia.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/metis/5.1.0: 19 files, 12.6MB
+==> Installing colmap dependency: isl
+==> Pouring isl--0.28.arm64_sequoia.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/isl/0.28: 80 files, 8.0MB
+==> Installing colmap dependency: mpfr
+==> Pouring mpfr--4.2.2.arm64_sequoia.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/mpfr/4.2.2: 31 files, 3.2MB
+==> Installing colmap dependency: libmpc
+==> Pouring libmpc--1.4.1.arm64_sequoia.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/libmpc/1.4.1: 14 files, 524.3KB
+==> Installing colmap dependency: gcc
+==> Pouring gcc--16.2.0.arm64_sequoia.bottle.1.tar.gz
+🍺  /opt/homebrew/Cellar/gcc/16.2.0: 1,705 files, 500.6MB
+==> Installing colmap dependency: libomp
+==> Pouring libomp--23.1.0.arm64_sequoia.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/libomp/23.1.0: 11 files, 1.8MB
+==> Installing colmap dependency: openblas
+==> Pouring openblas--0.3.34.arm64_sequoia.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/openblas/0.3.34: 30 files, 40.4MB
+==> Installing colmap dependency: suite-sparse
+==> Pouring suite-sparse--7.14.0.arm64_sequoia.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/suite-sparse/7.14.0: 258 files, 51.3MB
+==> Installing colmap dependency: hwloc
+==> Pouring hwloc--2.14.0.arm64_sequoia.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/hwloc/2.14.0: 994 files, 11.2MB
+==> Installing colmap dependency: tbb
+==> Pouring tbb--2023.1.0.arm64_sequoia.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/tbb/2023.1.0: 185 files, 2.9MB
+==> Installing colmap dependency: ceres-solver
+==> Pouring ceres-solver--2.2.0_6.arm64_sequoia.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/ceres-solver/2.2.0_6: 167 files, 14.4MB
+==> Installing colmap dependency: cgal
+==> Pouring cgal--6.2.all.bottle.1.tar.gz
+🍺  /opt/homebrew/Cellar/cgal/6.2: 3,930 files, 44.5MB
+==> Installing colmap dependency: faiss
+==> Pouring faiss--1.15.0.arm64_sequoia.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/faiss/1.15.0: 282 files, 10.4MB
+==> Installing colmap dependency: libaec
+==> Pouring libaec--1.1.7.arm64_sequoia.bottle.1.tar.gz
+🍺  /opt/homebrew/Cellar/libaec/1.1.7: 23 files, 221.4KB
+==> Upgrading colmap dependency: pkgconf
+==> Pouring pkgconf--3.0.6.arm64_sequoia.bottle.1.tar.gz
+🍺  /opt/homebrew/Cellar/pkgconf/3.0.6: 35 files, 750.9KB
+==> Installing colmap dependency: hdf5
+==> Pouring hdf5--2.2.0.arm64_sequoia.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/hdf5/2.2.0: 272 files, 24.9MB
+==> Installing colmap dependency: flann
+==> Pouring flann--1.9.2_4.arm64_sequoia.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/flann/1.9.2_4: 67 files, 10.1MB
+==> Installing colmap dependency: glew
+==> Pouring glew--2.3.1.arm64_sequoia.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/glew/2.3.1: 39 files, 3.3MB
+==> Installing colmap dependency: abseil
+==> Pouring abseil--20260817.0.arm64_sequoia.bottle.1.tar.gz
+🍺  /opt/homebrew/Cellar/abseil/20260817.0: 832 files, 11.8MB
+==> Installing colmap dependency: protobuf
+==> Pouring protobuf--36.0.arm64_sequoia.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/protobuf/36.0: 387 files, 17.9MB
+==> Installing colmap dependency: onnx
+==> Pouring onnx--1.22.0_3.arm64_sequoia.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/onnx/1.22.0_3: 117 files, 6.6MB
+==> Installing colmap dependency: re2
+==> Pouring re2--2025-11-05_2.arm64_sequoia.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/re2/2025-11-05_2: 18 files, 1.2MB
+==> Installing colmap dependency: onnxruntime
+==> Pouring onnxruntime--1.29.0_2.arm64_sequoia.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/onnxruntime/1.29.0_2: 32 files, 20.9MB
+==> Upgrading colmap dependency: dav1d
+==> Pouring dav1d--1.5.4.arm64_sequoia.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/dav1d/1.5.4: 16 files, 976KB
+==> Upgrading colmap dependency: mpg123
+==> Pouring mpg123--1.33.7.arm64_sequoia.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/mpg123/1.33.7: 34 files, 1.9MB
+==> Upgrading colmap dependency: lame
+==> Pouring lame--4.0.arm64_sequoia.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/lame/4.0: 29 files, 1.9MB
+==> Upgrading colmap dependency: libvmaf
+==> Pouring libvmaf--3.2.0.arm64_sequoia.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/libvmaf/3.2.0: 243 files, 8.2MB
+==> Upgrading colmap dependency: libvpx
+==> Pouring libvpx--1.17.0.arm64_sequoia.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/libvpx/1.17.0: 22 files, 4.4MB
+==> Upgrading colmap dependency: ca-certificates
+==> Pouring ca-certificates--2026-08-13.all.bottle.1.tar.gz
+🍺  /opt/homebrew/Cellar/ca-certificates/2026-08-13: 5 files, 204.3KB
+==> Upgrading colmap dependency: openssl@3
+==> Pouring openssl@3--3.6.4.arm64_sequoia.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/openssl@3/3.6.4: 7,639 files, 37.8MB
+==> Upgrading colmap dependency: opus
+==> Pouring opus--1.6.1.arm64_sequoia.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/opus/1.6.1: 16 files, 1MB
+==> Installing colmap dependency: sdl3
+==> Pouring sdl3--3.4.16.arm64_sequoia.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/sdl3/3.4.16: 103 files, 6.3MB
+==> Upgrading colmap dependency: sdl2-compat
+==> Pouring sdl2-compat--2.32.72.arm64_sequoia.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/sdl2-compat/2.32.72: 117 files, 3.3MB
+==> Upgrading colmap dependency: svt-av1
+==> Pouring svt-av1--4.2.0.arm64_sequoia.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/svt-av1/4.2.0: 23 files, 3.3MB
+==> Upgrading colmap dependency: x264
+==> Pouring x264--r3222.arm64_sequoia.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/x264/r3222: 12 files, 4.4MB
+==> Upgrading colmap dependency: x265
+==> Pouring x265--4.3.arm64_sequoia.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/x265/4.3: 12 files, 17.4MB
+==> Upgrading colmap dependency: ffmpeg
+==> Pouring ffmpeg--9.0.1_1.arm64_sequoia.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/ffmpeg/9.0.1_1: 290 files, 54.4MB
+==> Installing colmap dependency: fmt
+==> Pouring fmt--12.2.0.arm64_sequoia.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/fmt/12.2.0: 31 files, 1MB
+==> Upgrading colmap dependency: jpeg-turbo
+==> Pouring jpeg-turbo--3.2.0.arm64_sequoia.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/jpeg-turbo/3.2.0: 47 files, 4.3MB
+==> Upgrading colmap dependency: highway
+==> Pouring highway--1.4.0.arm64_sequoia.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/highway/1.4.0: 87 files, 5.7MB
+==> Upgrading colmap dependency: libtiff
+==> Pouring libtiff--4.7.2.arm64_sequoia.bottle.2.tar.gz
+🍺  /opt/homebrew/Cellar/libtiff/4.7.2: 493 files, 9.0MB
+==> Upgrading colmap dependency: openjph
+==> Pouring openjph--0.31.0.arm64_sequoia.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/openjph/0.31.0: 25 files, 600.7KB
+==> Upgrading colmap dependency: openexr
+==> Upgrading openexr dependency: imath
+==> Pouring imath--3.2.3.arm64_sequoia.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/imath/3.2.3: 50 files, 977.1KB
+==> Installing openexr
+==> Pouring openexr--3.4.15.arm64_sequoia.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/openexr/3.4.15: 212 files, 4.4MB
+==> Upgrading colmap dependency: jpeg-xl
+==> Pouring jpeg-xl--0.12.0.arm64_sequoia.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/jpeg-xl/0.12.0: 65 files, 36.3MB
+==> Upgrading colmap dependency: aom
+==> Pouring aom--3.14.1.arm64_sequoia.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/aom/3.14.1: 30 files, 10.8MB
+==> Upgrading colmap dependency: libde265
+==> Pouring libde265--1.1.2.arm64_sequoia.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/libde265/1.1.2: 18 files, 446.6KB
+==> Upgrading colmap dependency: libheif
+==> Pouring libheif--1.23.3.arm64_sequoia.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/libheif/1.23.3: 53 files, 8.6MB
+==> Installing colmap dependency: libraw
+==> Pouring libraw--0.22.2.arm64_sequoia.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/libraw/0.22.2: 74 files, 6.2MB
+==> Installing colmap dependency: minizip-ng
+==> Pouring minizip-ng--4.2.2.arm64_sequoia.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/minizip-ng/4.2.2: 35 files, 421.1KB
+==> Installing colmap dependency: pystring
+==> Pouring pystring--1.2.0.arm64_sequoia.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/pystring/1.2.0: 17 files, 266.4KB
+==> Installing colmap dependency: yaml-cpp
+==> Pouring yaml-cpp--0.9.0.arm64_sequoia.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/yaml-cpp/0.9.0: 51 files, 458.1KB
+==> Installing colmap dependency: zlib-ng-compat
+==> Pouring zlib-ng-compat--2.3.3_1.arm64_sequoia.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/zlib-ng-compat/2.3.3_1: 17 files, 427.0KB
+==> Installing colmap dependency: opencolorio
+==> Pouring opencolorio--2.5.2.arm64_sequoia.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/opencolorio/2.5.2: 42 files, 11.9MB
+==> Installing colmap dependency: pugixml
+==> Pouring pugixml--1.16.arm64_sequoia.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/pugixml/1.16: 16 files, 505.6KB
+==> Upgrading colmap dependency: sqlite
+==> Pouring sqlite--3.53.4.arm64_sequoia.bottle.1.tar.gz
+🍺  /opt/homebrew/Cellar/sqlite/3.53.4: 13 files, 5.3MB
+==> Installing colmap dependency: python@3.14
+Warning: These files were overwritten during the `brew link` step:
+==> Pouring python@3.14--3.14.7.arm64_sequoia.bottle.tar.gz
+/opt/homebrew/bin/idle3
+/opt/homebrew/bin/pip3
+/opt/homebrew/bin/pydoc3
+/opt/homebrew/bin/python3
+/opt/homebrew/bin/python3-config
+/opt/homebrew/bin/wheel3
+/opt/homebrew/share/man/man1/python3.1
+/opt/homebrew/lib/pkgconfig/python3-embed.pc
+/opt/homebrew/lib/pkgconfig/python3.pc
+/opt/homebrew/Frameworks/Python.framework/Headers
+/opt/homebrew/Frameworks/Python.framework/Python
+/opt/homebrew/Frameworks/Python.framework/Resources
+/opt/homebrew/Frameworks/Python.framework/Versions/Current
+
+They have been backed up to: /Users/jakob/Library/Caches/Homebrew/Backup
+==> Summary
+🍺  /opt/homebrew/Cellar/python@3.14/3.14.7: 3,776 files, 74.4MB
+==> Installing colmap dependency: openimageio
+==> Installing dependencies for openimageio: little-cms2 and libdeflate
+==> Upgrading openimageio dependency: little-cms2
+==> Pouring little-cms2--2.19.1.arm64_sequoia.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/little-cms2/2.19.1: 23 files, 1.4MB
+==> Upgrading openimageio dependency: libdeflate
+==> Pouring libdeflate--1.26.arm64_sequoia.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/libdeflate/1.26: 17 files, 319.8KB
+==> Installing openimageio
+==> Pouring openimageio--3.1.17.0.arm64_sequoia.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/openimageio/3.1.17.0: 101 files, 16.3MB
+==> Installing colmap dependency: poselib
+==> Pouring poselib--2.0.5.arm64_sequoia.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/poselib/2.0.5: 65 files, 6.5MB
+==> Installing colmap dependency: dbus
+==> Pouring dbus--1.16.2_1.arm64_sequoia.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/dbus/1.16.2_1: 79 files, 2.0MB
+==> Installing colmap dependency: double-conversion
+==> Pouring double-conversion--3.4.0.arm64_sequoia.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/double-conversion/3.4.0: 29 files, 256.1KB
+==> Installing colmap dependency: json-c
+==> Pouring json-c--0.19.arm64_sequoia.bottle.1.tar.gz
+🍺  /opt/homebrew/Cellar/json-c/0.19: 34 files, 362.3KB
+==> Upgrading colmap dependency: glib
+==> Pouring glib--2.88.3.arm64_sequoia.bottle.1.tar.gz
+🍺  /opt/homebrew/Cellar/glib/2.88.3: 501 files, 39.7MB
+==> Upgrading colmap dependency: fontconfig
+==> Pouring fontconfig--2.18.3.arm64_sequoia.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/fontconfig/2.18.3: 102 files, 1.9MB
+==> Upgrading colmap dependency: graphite2
+==> Pouring graphite2--1.3.15.arm64_sequoia.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/graphite2/1.3.15: 19 files, 257KB
+==> Upgrading colmap dependency: harfbuzz
+==> Pouring harfbuzz--14.4.0.arm64_sequoia.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/harfbuzz/14.4.0: 96 files, 13.6MB
+==> Installing colmap dependency: md4c
+==> Pouring md4c--0.5.3.arm64_sequoia.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/md4c/0.5.3: 20 files, 275.6KB
+==> Installing colmap dependency: qtbase
+==> Upgrading qtbase dependency: pcre2
+==> Pouring pcre2--10.48.arm64_sequoia.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/pcre2/10.48: 245 files, 7.3MB
+==> Installing qtbase
+==> Pouring qtbase--6.11.2.arm64_sequoia.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/qtbase/6.11.2: 4,126 files, 60.8MB
+==> Installing colmap dependency: qtsvg
+==> Pouring qtsvg--6.11.2.arm64_sequoia.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/qtsvg/6.11.2: 112 files, 1.2MB
+==> Installing colmap
+==> Pouring colmap--4.1.1_3.arm64_sequoia.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/colmap/4.1.1_3: 404 files, 36.5MB
+==> `brew cleanup` has not been run in the last 30 days, running now...
+Disable this behaviour by setting `HOMEBREW_NO_INSTALL_CLEANUP=1`.
+Hide these hints with `HOMEBREW_NO_ENV_HINTS=1` (see `man brew`).
+Removing: /opt/homebrew/Cellar/aom/3.12.0... (24 files, 10.3MB)
+Removing: /opt/homebrew/Cellar/aom/3.13.1... (28 files, 10.6MB)
+Removing: /Users/jakob/Library/Caches/Homebrew/aom--3.13.1... (4.2MB)
+Removing: /Users/jakob/Library/Caches/Homebrew/aom_bottle_manifest--3.13.1... (32.2KB)
+Removing: /Users/jakob/Library/Caches/Homebrew/brotli--1.2.0... (793.9KB)
+Removing: /Users/jakob/Library/Caches/Homebrew/brotli_bottle_manifest--1.2.0... (8.0KB)
+Removing: /opt/homebrew/Cellar/ca-certificates/2026-03-19... (4 files, 237.5KB)
+Removing: /Users/jakob/Library/Caches/Homebrew/ca-certificates--2026-03-19... (132.4KB)
+Removing: /Users/jakob/Library/Caches/Homebrew/ca-certificates_bottle_manifest--2026-03-19... (2KB)
+Removing: /opt/homebrew/Cellar/dav1d/1.5.1... (16 files, 943.7KB)
+Removing: /opt/homebrew/Cellar/ffmpeg/7.1.1_1... (287 files, 54.7MB)
+Removing: /opt/homebrew/Cellar/fontconfig/2.17.1... (98 files, 1.6MB)
+Removing: /Users/jakob/Library/Caches/Homebrew/fontconfig_bottle_manifest--2.18.0... (13.8KB)
+Removing: /Users/jakob/Library/Caches/Homebrew/freetype--2.14.3... (996.6KB)
+Removing: /Users/jakob/Library/Caches/Homebrew/freetype_bottle_manifest--2.14.3... (9.4KB)
+Removing: /Users/jakob/Library/Caches/Homebrew/gettext--1.0... (10.3MB)
+Removing: /Users/jakob/Library/Caches/Homebrew/gettext_bottle_manifest--1.0... (13.7KB)
+Removing: /opt/homebrew/Cellar/glib/2.88.1... (506 files, 40MB)
+Removing: /Users/jakob/Library/Caches/Homebrew/glib--2.88.1... (9.3MB)
+Removing: /Users/jakob/Library/Caches/Homebrew/glib_bottle_manifest--2.88.1... (21.3KB)
+Removing: /Users/jakob/Library/Caches/Homebrew/gnupg--2.5.19... (5.6MB)
+Removing: /Users/jakob/Library/Caches/Homebrew/gnupg_bottle_manifest--2.5.19... (38.7KB)
+Removing: /Users/jakob/Library/Caches/Homebrew/gnutls--3.8.13... (3.1MB)
+Removing: /Users/jakob/Library/Caches/Homebrew/gnutls_bottle_manifest--3.8.13... (21.7KB)
+Removing: /Users/jakob/Library/Caches/Homebrew/gpgme--2.0.1... (785.9KB)
+Removing: /Users/jakob/Library/Caches/Homebrew/gpgme_bottle_manifest--2.0.1... (33.7KB)
+Removing: /Users/jakob/Library/Caches/Homebrew/gpgmepp--2.0.0... (195.6KB)
+Removing: /Users/jakob/Library/Caches/Homebrew/gpgmepp_bottle_manifest--2.0.0... (41.7KB)
+Removing: /opt/homebrew/Cellar/graphite2/1.3.14... (18 files, 287.3KB)
+Removing: /opt/homebrew/Cellar/harfbuzz/10.4.0... (77 files, 10.4MB)
+Removing: /opt/homebrew/Cellar/harfbuzz/12.2.0_1... (77 files, 12.5MB)
+Removing: /opt/homebrew/Cellar/harfbuzz/14.2.0... (94 files, 13.6MB)
+Removing: /Users/jakob/Library/Caches/Homebrew/harfbuzz--14.2.0... (3.6MB)
+Removing: /Users/jakob/Library/Caches/Homebrew/harfbuzz_bottle_manifest--14.2.0... (34.2KB)
+Removing: /opt/homebrew/Cellar/highway/1.2.0... (75 files, 4.9MB)
+Removing: /opt/homebrew/Cellar/highway/1.3.0... (81 files, 5.6MB)
+Removing: /Users/jakob/Library/Caches/Homebrew/highway--1.3.0... (897.3KB)
+Removing: /Users/jakob/Library/Caches/Homebrew/highway_bottle_manifest--1.3.0... (9.7KB)
+Removing: /Users/jakob/Library/Caches/Homebrew/imagemagick--7.1.2-17... (11MB)
+Removing: /Users/jakob/Library/Caches/Homebrew/imagemagick_bottle_manifest--7.1.2-17... (83KB)
+Removing: /opt/homebrew/Cellar/imath/3.2.2... (50 files, 990KB)
+Removing: /Users/jakob/Library/Caches/Homebrew/imath--3.2.2... (194.4KB)
+Removing: /Users/jakob/Library/Caches/Homebrew/imath_bottle_manifest--3.2.2... (7.4KB)
+Removing: /opt/homebrew/Cellar/jpeg-turbo/3.1.4.1... (47 files, 3.8MB)
+Removing: /Users/jakob/Library/Caches/Homebrew/jpeg-turbo--3.1.4.1... (1.1MB)
+Removing: /Users/jakob/Library/Caches/Homebrew/jpeg-turbo_bottle_manifest--3.1.4.1... (8.4KB)
+Removing: /opt/homebrew/Cellar/jpeg-xl/0.11.2... (64 files, 36.0MB)
+Removing: /Users/jakob/Library/Caches/Homebrew/jpeg-xl--0.11.2... (13.9MB)
+Removing: /Users/jakob/Library/Caches/Homebrew/jpeg-xl_bottle_manifest--0.11.2... (22KB)
+Removing: /opt/homebrew/Cellar/lame/3.100... (27 files, 2.3MB)
+Removing: /Users/jakob/Library/Caches/Homebrew/libassuan--3.0.2... (175.8KB)
+Removing: /Users/jakob/Library/Caches/Homebrew/libassuan_bottle_manifest--3.0.2... (12.9KB)
+Removing: /opt/homebrew/Cellar/libde265/1.0.15... (22 files, 1.6MB)
+Removing: /opt/homebrew/Cellar/libde265/1.0.16... (21 files, 1.5MB)
+Removing: /Users/jakob/Library/Caches/Homebrew/libde265--1.0.16... (450.8KB)
+Removing: /Users/jakob/Library/Caches/Homebrew/libde265_bottle_manifest--1.0.16... (10.4KB)
+Removing: /opt/homebrew/Cellar/libdeflate/1.25... (17 files, 336.4KB)
+Removing: /Users/jakob/Library/Caches/Homebrew/libdeflate--1.25... (113.3KB)
+Removing: /Users/jakob/Library/Caches/Homebrew/libdeflate_bottle_manifest--1.25... (7.8KB)
+Removing: /Users/jakob/Library/Caches/Homebrew/libgcrypt--1.12.2... (1.5MB)
+Removing: /Users/jakob/Library/Caches/Homebrew/libgcrypt_bottle_manifest--1.12.2... (10.6KB)
+Removing: /Users/jakob/Library/Caches/Homebrew/libgpg-error--1.60... (580.4KB)
+Removing: /Users/jakob/Library/Caches/Homebrew/libgpg-error_bottle_manifest--1.60... (9.5KB)
+Removing: /opt/homebrew/Cellar/libheif/1.21.2... (50 files, 7.3MB)
+Removing: /Users/jakob/Library/Caches/Homebrew/libheif--1.21.2... (2.6MB)
+Removing: /Users/jakob/Library/Caches/Homebrew/libheif_bottle_manifest--1.21.2... (33.8KB)
+Removing: /Users/jakob/Library/Caches/Homebrew/libidn2--2.3.8... (311.6KB)
+Removing: /Users/jakob/Library/Caches/Homebrew/libidn2_bottle_manifest--2.3.8... (12.8KB)
+Removing: /Users/jakob/Library/Caches/Homebrew/libksba--1.6.8... (178.8KB)
+Removing: /Users/jakob/Library/Caches/Homebrew/libksba_bottle_manifest--1.6.8... (9.9KB)
+Removing: /Users/jakob/Library/Caches/Homebrew/libnghttp2--1.69.0... (232.1KB)
+Removing: /Users/jakob/Library/Caches/Homebrew/libnghttp2_bottle_manifest--1.69.0... (7.3KB)
+Removing: /Users/jakob/Library/Caches/Homebrew/libpng--1.6.58... (461.6KB)
+Removing: /Users/jakob/Library/Caches/Homebrew/libpng_bottle_manifest--1.6.58... (8.6KB)
+Removing: /Users/jakob/Library/Caches/Homebrew/libtasn1--4.21.0... (167.2KB)
+Removing: /Users/jakob/Library/Caches/Homebrew/libtasn1_bottle_manifest--4.21.0... (7.9KB)
+Removing: /opt/homebrew/Cellar/libtiff/4.7.1_1... (488 files, 9.0MB)
+Removing: /Users/jakob/Library/Caches/Homebrew/libtiff--4.7.1_1... (1.9MB)
+Removing: /Users/jakob/Library/Caches/Homebrew/libtiff_bottle_manifest--4.7.1_1... (12.6KB)
+Removing: /Users/jakob/Library/Caches/Homebrew/libunistring--1.4.2... (1.9MB)
+Removing: /Users/jakob/Library/Caches/Homebrew/libunistring_bottle_manifest--1.4.2... (7.3KB)
+Removing: /Users/jakob/Library/Caches/Homebrew/libusb--1.0.29... (192.9KB)
+Removing: /Users/jakob/Library/Caches/Homebrew/libusb_bottle_manifest--1.0.29... (16.2KB)
+Removing: /opt/homebrew/Cellar/libvmaf/3.0.0... (235 files, 7.5MB)
+Removing: /opt/homebrew/Cellar/libvpx/1.15.0... (22 files, 4.3MB)
+Removing: /Users/jakob/Library/Caches/Homebrew/libx11--1.8.13... (2.3MB)
+Removing: /Users/jakob/Library/Caches/Homebrew/libx11_bottle_manifest--1.8.13... (14.4KB)
+Removing: /Users/jakob/Library/Caches/Homebrew/libxext--1.3.7... (109.7KB)
+Removing: /Users/jakob/Library/Caches/Homebrew/libxext_bottle_manifest--1.3.7... (11.5KB)
+Removing: /opt/homebrew/Cellar/little-cms2/2.19... (23 files, 1.5MB)
+Removing: /Users/jakob/Library/Caches/Homebrew/little-cms2--2.19... (437.9KB)
+Removing: /Users/jakob/Library/Caches/Homebrew/little-cms2_bottle_manifest--2.19... (13KB)
+Removing: /Users/jakob/Library/Caches/Homebrew/m4--1.4.21... (284.0KB)
+Removing: /Users/jakob/Library/Caches/Homebrew/m4_bottle_manifest--1.4.21... (9.5KB)
+Removing: /opt/homebrew/Cellar/mpg123/1.32.10... (34 files, 2MB)
+Removing: /Users/jakob/Library/Caches/Homebrew/nettle--3.10.2... (988.5KB)
+Removing: /Users/jakob/Library/Caches/Homebrew/nettle_bottle_manifest--3.10.2... (11.9KB)
+Removing: /Users/jakob/Library/Caches/Homebrew/npth--1.8... (39.5KB)
+Removing: /Users/jakob/Library/Caches/Homebrew/npth_bottle_manifest--1.8... (9.3KB)
+Removing: /Users/jakob/Library/Caches/Homebrew/nspr--4.38.2... (332.8KB)
+Removing: /Users/jakob/Library/Caches/Homebrew/nspr_bottle_manifest--4.38.2... (7.7KB)
+Removing: /Users/jakob/Library/Caches/Homebrew/nss--3.123.1... (6.2MB)
+Removing: /Users/jakob/Library/Caches/Homebrew/nss_bottle_manifest--3.123.1... (14.8KB)
+Removing: /opt/homebrew/Cellar/openexr/3.3.2... (210 files, 6.4MB)
+Removing: /opt/homebrew/Cellar/openexr/3.4.7... (212 files, 4.6MB)
+Removing: /Users/jakob/Library/Caches/Homebrew/openexr--3.4.7... (1MB)
+Removing: /Users/jakob/Library/Caches/Homebrew/openexr_bottle_manifest--3.4.7... (15.6KB)
+Removing: /opt/homebrew/Cellar/openjph/0.26.3... (25 files, 637.5KB)
+Removing: /Users/jakob/Library/Caches/Homebrew/openjph--0.26.3... (158.2KB)
+Removing: /Users/jakob/Library/Caches/Homebrew/openjph_bottle_manifest--0.26.3... (12.3KB)
+Removing: /opt/homebrew/Cellar/openssl@3/3.6.2... (7,627 files, 37.7MB)
+Removing: /Users/jakob/Library/Caches/Homebrew/openssl@3--3.6.2... (10.9MB)
+Removing: /Users/jakob/Library/Caches/Homebrew/openssl@3_bottle_manifest--3.6.2... (12.0KB)
+Removing: /opt/homebrew/Cellar/opus/1.5.2... (16 files, 1MB)
+Removing: /Users/jakob/Library/Caches/Homebrew/p11-kit--0.26.2... (992.6KB)
+Removing: /Users/jakob/Library/Caches/Homebrew/p11-kit_bottle_manifest--0.26.2... (10.0KB)
+Removing: /opt/homebrew/Cellar/pcre2/10.47_1... (244 files, 7.3MB)
+Removing: /Users/jakob/Library/Caches/Homebrew/pcre2--10.47_1... (2.4MB)
+Removing: /Users/jakob/Library/Caches/Homebrew/pcre2_bottle_manifest--10.47_1... (11.7KB)
+Removing: /Users/jakob/Library/Caches/Homebrew/pinentry--1.3.2... (132.6KB)
+Removing: /Users/jakob/Library/Caches/Homebrew/pinentry_bottle_manifest--1.3.2... (20KB)
+Removing: /opt/homebrew/Cellar/pkgconf/2.3.0_1... (27 files, 485.7KB)
+Removing: /Users/jakob/Library/Caches/Homebrew/pngquant--3.0.3... (316KB)
+Removing: /Users/jakob/Library/Caches/Homebrew/pngquant_bottle_manifest--3.0.3-1... (19.8KB)
+Removing: /Users/jakob/Library/Caches/Homebrew/poppler--26.04.0... (9.8MB)
+Removing: /Users/jakob/Library/Caches/Homebrew/poppler_bottle_manifest--26.04.0... (65.5KB)
+Removing: /Users/jakob/Library/Caches/Homebrew/readline--8.3.3... (758.1KB)
+Removing: /Users/jakob/Library/Caches/Homebrew/readline_bottle_manifest--8.3.3... (10.0KB)
+Removing: /opt/homebrew/Cellar/sdl2/2.32.2... (94 files, 6.7MB)
+Removing: /Users/jakob/Library/Caches/Homebrew/shared-mime-info--2.4_1... (1.2MB)
+Removing: /Users/jakob/Library/Caches/Homebrew/shared-mime-info_bottle_manifest--2.4_1... (16.9KB)
+Removing: /opt/homebrew/Cellar/sqlite/3.50.4... (13 files, 5MB)
+Removing: /opt/homebrew/Cellar/svt-av1/3.0.0... (18 files, 3.3MB)
+Removing: /Users/jakob/Library/Caches/Homebrew/unbound--1.25.0... (3MB)
+Removing: /Users/jakob/Library/Caches/Homebrew/unbound_bottle_manifest--1.25.0... (14.7KB)
+Removing: /opt/homebrew/Cellar/x264/r3108... (11 files, 4.4MB)
+Removing: /opt/homebrew/Cellar/x265/4.1... (12 files, 11.8MB)
+Removing: /Users/jakob/Library/Caches/Homebrew/xorgproto--2025.1... (720KB)
+Removing: /Users/jakob/Library/Caches/Homebrew/xorgproto_bottle_manifest--2025.1... (13.1KB)
+Removing: /Users/jakob/Library/Caches/Homebrew/xz--5.8.3... (771.2KB)
+Removing: /Users/jakob/Library/Caches/Homebrew/xz_bottle_manifest--5.8.3... (11.8KB)
+Removing: /Users/jakob/Library/Caches/Homebrew/zstd--1.5.7_1... (794.7KB)
+Removing: /Users/jakob/Library/Caches/Homebrew/zstd_bottle_manifest--1.5.7_1... (13.2KB)
+==> Autoremoving 25 unneeded formulae:
+aribb24
+cjson
+flac
+frei0r
+libbluray
+libmicrohttpd
+libogg
+librist
+libsamplerate
+libsndfile
+libsodium
+libsoxr
+libssh
+libvidstab
+libvorbis
+opencore-amr
+rav1e
+rubberband
+snappy
+speex
+srt
+theora
+xvid
+zeromq
+zimg
+Uninstalling /opt/homebrew/Cellar/rubberband/4.0.0... (15 files, 2MB)
+Uninstalling /opt/homebrew/Cellar/aribb24/1.0.4... (14 files, 208.6KB)
+Uninstalling /opt/homebrew/Cellar/xvid/1.3.7... (10 files, 1.3MB)
+Uninstalling /opt/homebrew/Cellar/frei0r/2.3.3... (157 files, 5.8MB)
+Uninstalling /opt/homebrew/Cellar/zimg/3.0.5... (27 files, 1.2MB)
+Uninstalling /opt/homebrew/Cellar/speex/1.2.1... (25 files, 876.1KB)
+Uninstalling /opt/homebrew/Cellar/zeromq/4.3.5_1... (84 files, 6.5MB)
+Uninstalling /opt/homebrew/Cellar/libbluray/1.3.4... (21 files, 1.1MB)
+Uninstalling /opt/homebrew/Cellar/srt/1.5.4... (21 files, 4.9MB)
+Uninstalling /opt/homebrew/Cellar/librist/0.2.11... (29 files, 835.9KB)
+Uninstalling /opt/homebrew/Cellar/snappy/1.2.1... (19 files, 176.3KB)
+Uninstalling /opt/homebrew/Cellar/opencore-amr/0.1.6... (17 files, 671.0KB)
+Uninstalling /opt/homebrew/Cellar/rav1e/0.7.1... (15 files, 48MB)
+Uninstalling /opt/homebrew/Cellar/libssh/0.11.1... (25 files, 1.5MB)
+Uninstalling /opt/homebrew/Cellar/libvidstab/1.1.1... (25 files, 192.4KB)
+Uninstalling /opt/homebrew/Cellar/libsoxr/0.1.3... (29 files, 331KB)
+Uninstalling /opt/homebrew/Cellar/theora/1.1.1... (97 files, 2.2MB)
+Uninstalling /opt/homebrew/Cellar/cjson/1.7.18... (24 files, 263.4KB)
+Uninstalling /opt/homebrew/Cellar/libsamplerate/0.2.2... (32 files, 3.2MB)
+Uninstalling /opt/homebrew/Cellar/libmicrohttpd/1.0.1... (26 files, 1.6MB)
+Uninstalling /opt/homebrew/Cellar/libsodium/1.0.20... (78 files, 904.6KB)
+Uninstalling /opt/homebrew/Cellar/libsndfile/1.2.2_1... (55 files, 1.8MB)
+Uninstalling /opt/homebrew/Cellar/libvorbis/1.3.7... (157 files, 2.5MB)
+Uninstalling /opt/homebrew/Cellar/flac/1.5.0... (40 files, 2.0MB)
+Uninstalling /opt/homebrew/Cellar/libogg/1.3.5... (97 files, 525.6KB)
+Removing: /Users/jakob/Library/Caches/Homebrew/portable-ruby-4.0.5_1.arm64_big_sur.bottle.tar.gz... (12.7MB)
+Removing: /Users/jakob/Library/Caches/Homebrew/portable-ruby-4.0.6.arm64_big_sur.bottle.tar.gz... (12.7MB)
+Removing: /Users/jakob/Library/Caches/Homebrew/api/cask/blender.json... (5.4KB)
+Removing: /Users/jakob/Library/Caches/Homebrew/bootsnap/14e9983d8f21ebd1759b5d12e5a0f648a2e5b645d0e27f72867e9cb6262257d9... (1,039 files, 9.3MB)
+Removing: /Users/jakob/Library/Logs/Homebrew/glib... (64B)
+Pruned 0 symbolic links and 4 directories from /opt/homebrew
+==> Caveats
+==> ffmpeg
+ffmpeg-full includes additional tools and libraries that are not included in the regular ffmpeg formula.

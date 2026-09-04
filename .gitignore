@@ -1,0 +1,24 @@
+# Source media and build intermediates.
+# All regenerable by `./run.sh`, and far too large for git:
+#   input/         523 MB  source video
+#   frames/        455 MB  extracted + tonemapped JPEGs
+#   colmap/        1.2 GB  database, sparse model, undistorted images
+#   splat/         900 MB  trained PLYs
+#   tools/         145 MB  brush_app binary, splat-transform
+#   web-fallback/   42 MB  single-file SuperSplat viewer
+input/
+frames/
+colmap/
+splat/
+tools/
+web-fallback/
+
+# Local environment
+.venv/
+web-src/node_modules/
+.stamps/
+
+# Noise
+.DS_Store
+__pycache__/
+*.pyc
