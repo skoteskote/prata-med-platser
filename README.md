@@ -3,7 +3,7 @@
 A large timber-framed warehouse interior, reconstructed from a single handheld
 iPhone clip and rendered in the browser.
 
-**▶ [View it live](https://skoteskote.github.io/warehouse-splat/)**
+**▶ [View it live](https://skoteskote.github.io/prata-med-platser/)**
 
 Drag to orbit · right-drag or two fingers to pan · scroll to zoom ·
 **W A S D** to fly · Q/E down/up · Shift to move faster · R to reset.
