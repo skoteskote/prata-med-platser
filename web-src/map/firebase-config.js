@@ -1,44 +1,20 @@
 /* Firebase connection details for the shared map.
  *
- * These are NOT secret. A Firebase web config is public by design — it
- * identifies the project, it does not grant access. What actually protects the
- * data is the database rules, which live in the Firebase console.
+ * These are NOT secret. A Firebase web config identifies the project, it does
+ * not grant access — that is what the database rules are for, and they live in
+ * firebase/database.rules.json (deploy with `firebase deploy --only database`
+ * from that folder). Anyone with the link can draw on the map and clear it;
+ * nothing outside /rooms is reachable at all.
  *
- * Until this is filled in the map still works: you can draw, undo and save a
- * PDF, you just don't see anyone else. To switch sharing on, paste the config
- * object from
- *   Firebase console -> Project settings -> Your apps -> Web app -> SDK setup
- * and make sure `databaseURL` is included (it only appears once a Realtime
- * Database exists in the project).
+ * Set this back to `null` to work on the map without sharing: the page still
+ * draws, undoes and saves a PDF, and the whole Firebase branch drops out of the
+ * bundle. Pointing it at the local emulator instead is described under "Testa
+ * delningen utan projekt" in CLAUDE.md.
  */
-export const FIREBASE_CONFIG = null;
-
-/* Example of what goes here:
-
 export const FIREBASE_CONFIG = {
-  apiKey: "…",
+  apiKey: "AIzaSyAslBhWTI8QNT169ed1QKB2ZiMTn23c0cI",
   authDomain: "prata-med-platser.firebaseapp.com",
   databaseURL: "https://prata-med-platser-default-rtdb.europe-west1.firebasedatabase.app",
   projectId: "prata-med-platser",
-  appId: "…",
+  appId: "1:786738775900:web:148ab86663a1e69e342399",
 };
-
-Suggested database rules — anyone with the link may draw, but a single stroke
-cannot be enormous and nothing outside /rooms is reachable:
-
-{
-  "rules": {
-    "rooms": {
-      "$room": {
-        ".read": true,
-        ".write": true,
-        "strokes": {
-          "$stroke": {
-            ".validate": "newData.hasChildren(['pts']) && newData.child('pts').val().length < 20000"
-          }
-        }
-      }
-    }
-  }
-}
-*/

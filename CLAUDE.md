@@ -119,17 +119,32 @@ splatten. Länkas inte från menyn och är `noindex`.
   som webp (~160 kB), tryckversion som jpg (4200 px = 180 dpi) som bara hämtas
   när någon trycker Spara.
 
-### Slå på delningen
+### Delningen — inkopplad
 
-Kartan fungerar utan Firebase — man ritar, ångrar och sparar PDF, men ser inga
-andra. För att koppla in delning:
+Projektet **`prata-med-platser`** (nummer `786738775900`), databasen i
+`europe-west1`. Webbappen heter "Karta". Konfigurationen ligger i
+`web-src/map/firebase-config.js`, reglerna i `firebase/database.rules.json`.
 
-1. Skapa ett gratisprojekt på [console.firebase.google.com](https://console.firebase.google.com).
-2. Lägg till en **Realtime Database** (välj `europe-west1`). Det är först då
-   `databaseURL` dyker upp.
-3. Klistra in **`firebase/database.rules.json`** i Rules-fliken, eller kör
-   `firebase deploy --only database` från `firebase/`.
-4. Kopiera webb-konfigurationen till `web-src/map/firebase-config.js`, bygg om.
+Efter en regeländring:
+
+```sh
+cd firebase && firebase deploy --only database --project prata-med-platser
+```
+
+Nyttiga kommandon när något är oklart — CLI:t är inloggat som jakob@untold.garden:
+
+```sh
+firebase database:instances:list --project prata-med-platser
+firebase apps:sdkconfig WEB --project prata-med-platser
+curl "https://prata-med-platser-default-rtdb.europe-west1.firebasedatabase.app/rooms/bolanderna/strokes.json"
+```
+
+Rummet kommer från `?rum=` i URL:en och är `bolanderna` om inget anges. Ett rum
+per workshop-tillfälle håller isär teckningarna.
+
+Att rensa ett rum utifrån går på `strokes`-noden, inte på rummet:
+`.write` ligger på `rooms/$room/strokes`, så en DELETE mot `rooms/$room` nekas.
+Det är avsiktligt.
 
 ### Testa delningen utan projekt
 
