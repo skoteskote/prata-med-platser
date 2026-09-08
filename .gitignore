@@ -18,6 +18,10 @@ web-fallback/
 web-src/node_modules/
 .stamps/
 
+# Firebase emulator scratch
+firebase/*-debug.log
+firebase/.firebase/
+
 # Noise
 .DS_Store
 __pycache__/

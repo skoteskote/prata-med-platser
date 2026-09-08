@@ -1,0 +1,33 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+
+    "rooms": {
+      "$room": {
+        "present": {
+          ".read": true,
+          "$participant": {
+            ".write": true,
+            ".validate": "newData.isBoolean()"
+          }
+        },
+
+        "strokes": {
+          ".read": true,
+          ".write": true,
+
+          "$stroke": {
+            ".validate": "newData.hasChildren(['pts'])",
+            "pts": {
+              ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 200000"
+            },
+            "$other": { ".validate": false }
+          }
+        },
+
+        "$other": { ".validate": false }
+      }
+    }
+  }
+}

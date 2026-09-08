@@ -122,8 +122,33 @@ andra. För att koppla in delning:
 1. Skapa ett gratisprojekt på [console.firebase.google.com](https://console.firebase.google.com).
 2. Lägg till en **Realtime Database** (välj `europe-west1`). Det är först då
    `databaseURL` dyker upp.
-3. Klistra in reglerna som ligger som kommentar i `firebase-config.js`.
-4. Kopiera webb-konfigurationen dit och bygg om.
+3. Klistra in **`firebase/database.rules.json`** i Rules-fliken, eller kör
+   `firebase deploy --only database` från `firebase/`.
+4. Kopiera webb-konfigurationen till `web-src/map/firebase-config.js`, bygg om.
+
+### Testa delningen utan projekt
+
+Hela nätverksdelen går att köra lokalt, med riktiga regler och riktig databas:
+
+```sh
+cd firebase && firebase emulators:start --only database --project demo-prata
+```
+
+Peka sedan `firebase-config.js` mot emulatorn och bygg om:
+
+```js
+export const FIREBASE_CONFIG = {
+  apiKey: "demo",
+  projectId: "demo-prata",
+  databaseURL: "https://demo-prata-default-rtdb.firebaseio.com",
+  emulator: { host: "127.0.0.1", port: 9000 },
+};
+```
+
+Öppna `/map/?rum=test` i två flikar. Så verifierades live-synk, sen anslutning,
+närvaroräkning, ångra och rensa innan något Firebase-projekt fanns. **Ställ
+tillbaka till `null` innan commit.** Reglerna testas snabbast med curl mot
+`http://127.0.0.1:9000/…json?ns=demo-prata-default-rtdb`.
 
 Konfigurationen är **inte hemlig** — en Firebase web-config identifierar
 projektet, den ger ingen behörighet. Det är databasreglerna som skyddar datan.

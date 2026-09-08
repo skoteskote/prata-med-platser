@@ -8,27 +8,45 @@
  *  spread over months, and a late arrival gets the whole sheet handed to them
  *  without any replay logic of our own.
  *
- *  Strokes travel, not pixels. A stroke is a flat [x, y, width, …] array in
- *  map-width units, so it is a few kB and renders identically everywhere.
+ *  Strokes travel, not pixels.
  * ========================================================================== */
 import { FIREBASE_CONFIG } from "./firebase-config.js";
 
-/** Rounded on the way out: five decimals is finer than a pixel on an A2 sheet
- *  at print resolution, and it roughly halves what goes over the wire. */
-function trim(pts) {
-  const out = new Array(pts.length);
-  for (let i = 0; i < pts.length; i++) out[i] = Math.round(pts[i] * 1e5) / 1e5;
+/* A stroke goes over the wire as a *string* of comma-separated numbers, not as
+ * an array. Realtime Database stores an array as an object keyed "0", "1",
+ * "2"…, so a few hundred points would carry a few hundred keys of overhead in
+ * both bandwidth and storage. A string is a single value, it is compact, it is
+ * readable in the console, and it lets the security rules cap a stroke by
+ * simple length. Four decimals is finer than a pixel on an A2 sheet at print
+ * resolution. */
+function encode(pts) {
+  let out = "";
+  for (let i = 0; i < pts.length; i++) {
+    out += (i ? "," : "") + Math.round(pts[i] * 1e4) / 1e4;
+  }
   return out;
 }
 
+function decode(text) {
+  if (typeof text !== "string" || !text) return null;
+  const parts = text.split(",");
+  const out = new Array(parts.length);
+  for (let i = 0; i < parts.length; i++) {
+    const v = +parts[i];
+    if (!Number.isFinite(v)) return null;
+    out[i] = v;
+  }
+  return out.length >= 3 ? out : null;
+}
+
 /** Everything the map needs, with sharing switched off. The page is fully
- *  usable like this — it is also what you fall back to if the network drops. */
+ *  usable like this — it is also where we land if the network drops. */
 function soloSync(onStatus, message) {
   onStatus(message);
   return { publish() {}, remove() {}, clear() {}, enabled: false };
 }
 
-export function createSync({ room, onStroke, onRemove, onClear, onStatus }) {
+export function createSync({ room, onStroke, onRemove, onStatus }) {
   if (!FIREBASE_CONFIG || !FIREBASE_CONFIG.databaseURL) {
     return soloSync(onStatus, "Bara du — delning ej inkopplad");
   }
@@ -45,11 +63,16 @@ export function createSync({ room, onStroke, onRemove, onClear, onStatus }) {
       ]);
       const {
         getDatabase, ref, child, onChildAdded, onChildChanged, onChildRemoved,
-        onValue, set, remove: removeRef, onDisconnect,
+        onValue, set, remove: removeRef, onDisconnect, connectDatabaseEmulator,
       } = db;
 
       const app = initializeApp(FIREBASE_CONFIG);
       const database = getDatabase(app);
+      if (FIREBASE_CONFIG.emulator) {
+        connectDatabaseEmulator(database, FIREBASE_CONFIG.emulator.host,
+          FIREBASE_CONFIG.emulator.port);
+      }
+
       const roomRef = ref(database, `rooms/${room}`);
       const strokesRef = child(roomRef, "strokes");
       const presenceRef = child(roomRef, "present");
@@ -63,8 +86,8 @@ export function createSync({ room, onStroke, onRemove, onClear, onStatus }) {
         onStatus(present > 1 ? `${present} deltagare` : "Ansluten — ensam just nu");
       };
 
-      // Presence: our marker is cleared by the server if the tab dies, so a
-      // crashed laptop does not linger in the count.
+      // Presence: the marker is cleared by the server if the tab dies, so a
+      // closed laptop does not linger in the count.
       const mineRef = child(presenceRef, me);
       onValue(ref(database, ".info/connected"), (snap) => {
         online = snap.val() === true;
@@ -79,17 +102,18 @@ export function createSync({ room, onStroke, onRemove, onClear, onStatus }) {
         report();
       });
 
+      // Only ever child-level listeners. Watching the whole strokes node would
+      // re-send every stroke on the sheet to every participant on every single
+      // update — which, while people are drawing, is most of a second.
       const receive = (snap) => {
-        const value = snap.val();
-        if (value && Array.isArray(value.pts)) onStroke(snap.key, value.pts);
+        const pts = decode(snap.val() && snap.val().pts);
+        if (pts) onStroke(snap.key, pts);
       };
       onChildAdded(strokesRef, receive);
       onChildChanged(strokesRef, receive);
+      // Clearing the sheet removes the whole node; that still arrives here as
+      // one removal per stroke, which the map coalesces into a single redraw.
       onChildRemoved(strokesRef, (snap) => onRemove(snap.key));
-
-      // Clearing removes the whole node at once. The per-stroke removals still
-      // arrive, and the map coalesces them into one redraw.
-      onValue(strokesRef, (snap) => { if (!snap.exists()) onClear(); });
 
       // A rejected write must not take the drawing down with it: the local
       // canvas is already painted, and a dropped connection or a rules
@@ -99,7 +123,7 @@ export function createSync({ room, onStroke, onRemove, onClear, onStatus }) {
         onStatus("Kunde inte dela — ritar lokalt");
       });
 
-      api.publish = (id, pts) => guard(set(child(strokesRef, id), { pts: trim(pts) }));
+      api.publish = (id, pts) => guard(set(child(strokesRef, id), { pts: encode(pts) }));
       api.remove = (id) => guard(removeRef(child(strokesRef, id)));
       api.clear = () => guard(removeRef(strokesRef));
     } catch (err) {

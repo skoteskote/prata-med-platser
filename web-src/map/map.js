@@ -365,12 +365,6 @@ const sync = createSync({
     scheduleRedraw();
   },
 
-  onClear() {
-    strokes.clear();
-    myStrokeIds = [];
-    scheduleRedraw();
-  },
-
   onStatus(text) {
     statusEl.innerHTML = text ? `<span class="dot"></span>${text}` : "";
   },
