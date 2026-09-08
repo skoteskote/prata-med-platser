@@ -4,7 +4,8 @@ Webbplats för ett utforskande projekt mellan stadsplanering och offentlig konst
 i Främre Boländerna och Ulleråker i Uppsala. En 3D-scanning (gaussian splat) som
 går att navigera och måla på med bläck, plus två textsidor.
 
-**Live:** https://skoteskote.github.io/prata-med-platser/
+**Live:** https://pratamedplatser.se — samma adress som står tryckt på kartorna.
+Går även via https://skoteskote.github.io/prata-med-platser/
 **Repo:** `skoteskote/prata-med-platser` (public)
 
 Gruppen: Love Antell, Jakob Skote, Rosa Danenberg.
@@ -53,6 +54,21 @@ fungerar också, men mappnamn upprepas mellan projekt.
   konverteringen är tyst när den misslyckas.
 
 ---
+
+## Domänen
+
+`pratamedplatser.se` pekar på GitHub Pages (fyra A-poster på apex,
+`www` som CNAME till `skoteskote.github.io`). Workflowet skriver en `CNAME`-fil
+i artefakten vid varje deploy, så en publicering aldrig tappar domänen.
+
+**HTTPS var inte utfärdat än** när domänen kopplades in — GitHub beställer ett
+Let's Encrypt-certifikat automatiskt när DNS stämmer, vilket kan ta upp till ett
+dygn. När `https://pratamedplatser.se` svarar: kryssa i **Enforce HTTPS** under
+Settings → Pages. Kontrollera med:
+
+```sh
+gh api repos/skoteskote/prata-med-platser/pages --jq '{cname, https_enforced}'
+```
 
 ## Bygga och publicera
 

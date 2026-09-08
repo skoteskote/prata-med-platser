@@ -27,6 +27,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
+
+      # Keep the custom domain attached to every deploy. The setting lives in
+      # the repo's Pages config, but shipping the CNAME in the artifact too is
+      # what GitHub documents, and it means a deploy can never quietly drop the
+      # domain the printed maps point at.
+      - name: Pin the custom domain
+        run: echo 'pratamedplatser.se' > web/CNAME
+
       - uses: actions/upload-pages-artifact@v3
         with:
           path: web
