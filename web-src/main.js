@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { SparkRenderer, SplatMesh } from "@sparkjsdev/spark";
+import { INK, makeDabCanvas, widthForSpeed, alphaForWidth } from "./brush.js";
 
 /* ========================================================================== *
  *  CONFIGURATION — the things worth changing all live here.
@@ -47,40 +48,16 @@ const CONFIG = {
    *  render, under the ink, so painting stays pure black on top of it. */
   scanFade: 0.3,
 
-  /** Ink. Held-key painting onto the scan — see the "Ink" section below. */
+  /** Ink. Held-key painting onto the scan. How a stroke *feels* — spacing,
+   *  speed-to-width, dryness, taper — is shared with the map in brush.js;
+   *  only what is particular to painting in 3D is set here. */
   ink: {
+    ...INK,
     /** Brush diameter as a fraction of the viewport height, so the brush keeps
      *  a constant size on screen whatever depth you are painting at. */
     brushSize: 0.055,
-    /** Dab spacing along the stroke, as a fraction of the brush radius.
-     *  Tight enough that the stamps read as one continuous mark. */
-    spacing: 0.22,
-    /** Pure black. Tusch has no grey in it — any per-dab colour variation
-     *  immediately reads as spray rather than ink. */
+    /** Pure black. Tusch has no grey in it. */
     color: new THREE.Color(0x000000),
-    /** Dabs are stretched along the direction of travel, so consecutive stamps
-     *  drag into each other instead of reading as a row of blots. */
-    elongation: 1.3,
-
-    /** Speed to width, in px per second: a brush loaded and moving slowly lays
-     *  down its full width, and thins out as it is drawn faster. */
-    speedFat: 140,
-    speedThin: 1700,
-    minWidth: 0.2,
-    maxWidth: 1.0,
-    /** Per-dab opacity once the brush has thinned right out. Very low on
-     *  purpose: dabs overlap roughly nine deep, so anything near 0.3 still
-     *  composites to solid black. 0.08 stacks up to about half. */
-    dryAlpha: 0.08,
-
-    /** Dabs the stroke takes to open up to full width, and to lift off. */
-    taperDabs: 7,
-    liftDabs: 4,
-    /** Chance per dab of the fast brush skipping — the broken edge you get
-     *  when a real brush runs out of ink. */
-    skipChance: 0.22,
-    /** Kept rare: specks are the one genuinely spray-like thing here. */
-    spatterChance: 0.004,
     maxDabs: 24000,
   },
 };
@@ -270,44 +247,11 @@ function repivot() {
  *  brush: a real dab texture with a bitten edge beats a soft ellipsoid. They
  *  carry no depth test, because splats never write depth for one to use.
  * -------------------------------------------------------------------------- */
-/** One brush dab, drawn once onto a canvas: a loaded centre that falls away
- *  softly, with the rim bitten into so it reads as bristles rather than a
- *  circle. Every dab on the page is an instance of this. */
-function makeDabTexture(size = 256) {
-  const c = document.createElement("canvas");
-  c.width = c.height = size;
-  const g = c.getContext("2d");
-  const mid = size / 2;
 
-  // Hard almost to the rim. A soft gradient edge is what makes a stamp read as
-  // airbrush; a brush leaves a definite boundary with ink right up to it.
-  const grad = g.createRadialGradient(mid, mid, 0, mid, mid, mid);
-  grad.addColorStop(0, "rgba(255,255,255,1)");
-  grad.addColorStop(0.84, "rgba(255,255,255,1)");
-  grad.addColorStop(0.95, "rgba(255,255,255,0.88)");
-  grad.addColorStop(1, "rgba(255,255,255,0)");
-  g.fillStyle = grad;
-  g.fillRect(0, 0, size, size);
-
-  // Bristle streaks, running along X — which is the direction of travel once
-  // the dab is oriented. Consecutive stamps share this texture and the same
-  // alignment, so the gaps line up into continuous dry-brush striations
-  // instead of averaging away into a solid blob.
-  g.globalCompositeOperation = "destination-out";
-  g.lineCap = "round";
-  for (let i = 0; i < 6; i++) {
-    const y = mid + (Math.random() * 2 - 1) * mid * 0.8;
-    const x0 = Math.random() * size * 0.35;
-    const x1 = size - Math.random() * size * 0.35;
-    g.lineWidth = size * (0.004 + Math.random() * 0.013);
-    g.strokeStyle = `rgba(0,0,0,${0.75 + Math.random() * 0.25})`;
-    g.beginPath();
-    g.moveTo(x0, y);
-    g.quadraticCurveTo((x0 + x1) / 2, y + (Math.random() * 2 - 1) * size * 0.025, x1, y);
-    g.stroke();
-  }
-
-  const texture = new THREE.CanvasTexture(c);
+/** The shared brush dab, wrapped for three.js. White here because the
+ *  material tints it; the map draws the same canvas in black directly. */
+function inkTexture() {
+  const texture = new THREE.CanvasTexture(makeDabCanvas());
   texture.colorSpace = THREE.SRGBColorSpace;
   // No mipmaps. A dab draws far smaller on screen than this texture, and the
   // averaged mip levels blend the bristle gaps into a uniform half-alpha haze
@@ -328,7 +272,7 @@ inkAlpha.setUsage(THREE.DynamicDrawUsage);
 inkGeometry.setAttribute("aInkAlpha", inkAlpha);
 
 const inkMaterial = new THREE.MeshBasicMaterial({
-  map: makeDabTexture(),
+  map: inkTexture(),
   color: CONFIG.ink.color,
   transparent: true,
   // Splats do not write depth, so there is no usable depth buffer to test
@@ -437,11 +381,7 @@ function dab(center, scale) {
   inkMesh.setMatrixAt(inkDabs, scratch.matrix);
   // A thinned-out brush carries less ink, so the surface shows through it.
   // Taper and lift-off ride on this too, since both come through `scale`.
-  const load = THREE.MathUtils.clamp(
-    (scale - CONFIG.ink.minWidth) / (CONFIG.ink.maxWidth - CONFIG.ink.minWidth), 0, 1);
-  inkAlpha.setX(inkDabs, THREE.MathUtils.clamp(
-    THREE.MathUtils.lerp(CONFIG.ink.dryAlpha, 1, Math.pow(load, 0.35)) *
-      (0.9 + Math.random() * 0.2), 0.05, 1));
+  inkAlpha.setX(inkDabs, alphaForWidth(scale, CONFIG.ink));
   inkDabs += 1;
   inkMesh.count = inkDabs;
   inkDirty = true;
@@ -587,10 +527,7 @@ function extendStroke(clientX, clientY) {
   const now = performance.now();
   const speed = Math.hypot(clientX - stroke.lastScreen.x, clientY - stroke.lastScreen.y) /
     Math.max(now - stroke.lastTime, 1) * 1000;
-  const t = THREE.MathUtils.clamp(
-    (speed - CONFIG.ink.speedFat) / (CONFIG.ink.speedThin - CONFIG.ink.speedFat), 0, 1);
-  const wanted = THREE.MathUtils.lerp(
-    CONFIG.ink.maxWidth, CONFIG.ink.minWidth, Math.pow(t, 0.65));
+  const wanted = widthForSpeed(speed, CONFIG.ink);
   stroke.width += (wanted - stroke.width) * 0.3;
   stroke.lastTime = now;
   stroke.lastScreen.set(clientX, clientY);

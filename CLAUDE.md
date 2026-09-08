@@ -87,6 +87,53 @@ och committa både `web-src/` och `web/` i samma commit.
 - **Gitignorerat och återskapningsbart:** `input/ frames/ colmap/ splat/ tools/
   web-fallback/` — cirka 3,2 GB.
 
+### Kartan (`/map/`)
+
+Ett dolt arbetsverktyg för workshops som körs digitalt: samma bläckpensel, men
+på kartan i stället för på scanningen. Ligger som **egen sida**, inte som en
+route i vyaren, så att den aldrig drar in three.js eller den 30 MB stora
+splatten. Länkas inte från menyn och är `noindex`.
+
+- **`web-src/brush.js`** — penseln. Delas av vyaren (3D, stämplar som
+  instansierade quads) och kartan (2D, stämplar rakt på en canvas).
+  Renderarna har inget gemensamt; penselkänslan har det. Ändra den här, så
+  följer båda med.
+- **`web-src/map/`** — sidan. `map.js` ritar och exporterar PDF, `sync.js`
+  sköter delningen, `firebase-config.js` innehåller nycklarna.
+- Ett streck är en platt `[x, y, bredd, …]`-array i **kartbredder** — båda
+  axlarna delas med bredden, så en cirkel förblir en cirkel oavsett skärm.
+  Det är streck som skickas över nätet och som PDF:en byggs om från, aldrig
+  pixlar.
+- Slumpen i penseln (torra hopp, stänk) är **seedad per streck-id**, så alla
+  deltagares skärmar och PDF:en ritar exakt samma bläck.
+- PDF:en byggs för hand — ett PDF-bibliotek hade varit ~350 kB för en knapp.
+  En ensidig PDF med en JPEG är ett litet, väl upptrampat hörn av formatet.
+  Sidan är A2 liggande (1683,78 × 1190,55 pt) för att matcha den tryckta
+  kartan. Kontrollera med `qpdf --check` och `pdfinfo` efter ändringar.
+- Kartbilderna kommer från `Resources / Karta Främre Boländerna`. Skärmversion
+  som webp (~160 kB), tryckversion som jpg (4200 px = 180 dpi) som bara hämtas
+  när någon trycker Spara.
+
+### Slå på delningen
+
+Kartan fungerar utan Firebase — man ritar, ångrar och sparar PDF, men ser inga
+andra. För att koppla in delning:
+
+1. Skapa ett gratisprojekt på [console.firebase.google.com](https://console.firebase.google.com).
+2. Lägg till en **Realtime Database** (välj `europe-west1`). Det är först då
+   `databaseURL` dyker upp.
+3. Klistra in reglerna som ligger som kommentar i `firebase-config.js`.
+4. Kopiera webb-konfigurationen dit och bygg om.
+
+Konfigurationen är **inte hemlig** — en Firebase web-config identifierar
+projektet, den ger ingen behörighet. Det är databasreglerna som skyddar datan.
+Gratisnivån tar 100 samtidiga anslutningar och **somnar inte** vid inaktivitet,
+vilket var skälet att välja den framför Supabase: workshops ligger utspridda
+över månader.
+
+Vem som helst med länken kan rita och rensa. Det är medvetet för ett dolt
+verktyg — men det är värt att veta innan länken sprids.
+
 ### Logotypen
 
 Genereras ur Drive-jpg:en med ImageMagick: alfa = inverterad luminans, så

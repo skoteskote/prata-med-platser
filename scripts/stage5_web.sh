@@ -47,13 +47,26 @@ say "total: $(human_size "$WEB")"
 say ""
 say "+ offline check (no external loads in the built viewer)"
 HITS=$(grep -ohE "<(script|link|img|source|video|audio|iframe|embed|object|track)\b[^>]*(src|href|data)=[\"'][^\"']*https?://[^\"']*|fetch\([\"']https?://|importScripts\([\"']https?://|new Worker\([\"']https?://|@import[^;]*https?://" \
-  "$WEB/index.html" "$WEB/app/"*.js "$WEB/app/"*.css 2>/dev/null)
+  "$WEB/index.html" "$WEB/map/index.html" "$WEB/app/"*.js "$WEB/app/"*.css 2>/dev/null)
 if [ -n "$HITS" ]; then
   say "  FAIL - the viewer would load from the network:"
   echo "$HITS" | sed 's/^/    /' | tee -a "$STAGE_LOG"
   die "web/ is not self-contained"
 fi
 say "  clean: no script/style/fetch/worker target outside web/"
+
+# One deliberate exception, declared rather than pretended away: the map page
+# talks to Firebase Realtime Database so that workshop participants see each
+# other's ink. The SDK assembles those URLs itself at runtime from the config
+# in web-src/map/firebase-config.js, so the grep above cannot see the
+# connection and could not be made to. List what is in there instead.
+NET=$(grep -ohE "firebaseio\\.com|firebasedatabase\\.app" "$WEB/app/"*.js 2>/dev/null | sort -u)
+if [ -n "$NET" ]; then
+  say ""
+  say "+ declared network endpoints (the shared map)"
+  echo "$NET" | sed 's/^/    /' | tee -a "$STAGE_LOG"
+  say "  the viewer itself stays offline; only /map/ opens a connection"
+fi
 say "  (the remaining https:// strings are XML namespaces and doc links, not requests)"
 
 stage_complete web

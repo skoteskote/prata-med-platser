@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<!-- Not a public page: it is a workshop tool, and should stay out of search. -->
+<meta name="robots" content="noindex, nofollow">
+<title>Karta — Prata med platser</title>
+<link rel="icon" href="../app/favicon.png">
+  <script type="module" crossorigin src="../app/map.js"></script>
+  <link rel="modulepreload" crossorigin href="../app/brush.js">
+  <link rel="stylesheet" crossorigin href="../app/map.css">
+</head>
+<body>
+
+<div id="stage">
+  <div id="sheet">
+    <img id="map" src="../app/karta-fb-screen.webp" alt="Karta över Främre Boländerna" draggable="false">
+    <canvas id="ink"></canvas>
+  </div>
+</div>
+
+<header id="topbar">
+  <a class="brand" href="../" aria-label="Prata med platser – till startsidan">
+    <img src="../app/logo.png" alt="Prata med platser" width="700" height="590">
+  </a>
+  <p id="place">Främre Boländerna</p>
+</header>
+
+<div id="tools">
+  <button id="undo" type="button" disabled>Ångra</button>
+  <button id="clear" type="button" disabled>Rensa allt</button>
+  <button id="save" type="button">Spara PDF</button>
+</div>
+
+<p id="status" aria-live="polite"></p>
+
+<div id="overlay" hidden>
+  <div id="overlay-panel">
+    <p id="overlay-text">Rensa allas teckningar?</p>
+    <div id="overlay-actions">
+      <button id="overlay-cancel" type="button">Avbryt</button>
+      <button id="overlay-confirm" type="button">Rensa</button>
+    </div>
+  </div>
+</div>
+
+<noscript>
+  <p class="noscript">Den här sidan behöver JavaScript för att kunna rita.</p>
+</noscript>
+
+</body>
+</html>

@@ -11,6 +11,7 @@
   "description": "",
   "dependencies": {
     "@sparkjsdev/spark": "^2.1.0",
+    "firebase": "^12.18.0",
     "three": "^0.185.1"
   },
   "devDependencies": {
