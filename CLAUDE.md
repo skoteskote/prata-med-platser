@@ -110,6 +110,11 @@ splatten. Länkas inte från menyn och är `noindex`.
   En ensidig PDF med en JPEG är ett litet, väl upptrampat hörn av formatet.
   Sidan är A2 liggande (1683,78 × 1190,55 pt) för att matcha den tryckta
   kartan. Kontrollera med `qpdf --check` och `pdfinfo` efter ändringar.
+- **Zoom och panorering** ligger som en transform, inte som CSS-skalning av
+  canvasen: strecken ritas om i den nya skalan, så bläcket är lika skarpt vid
+  8x som vid anpassad vy. Nyp (ctrl+hjul) zoomar, tvåfingerskroll panorerar,
+  mellanslag eller mittenknappen drar. Vyn läcker inte in i PDF:en — den
+  byggs alltid från hela arket.
 - Kartbilderna kommer från `Resources / Karta Främre Boländerna`. Skärmversion
   som webp (~160 kB), tryckversion som jpg (4200 px = 180 dpi) som bara hämtas
   när någon trycker Spara.

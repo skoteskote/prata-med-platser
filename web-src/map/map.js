@@ -25,6 +25,10 @@ const CONFIG = {
   printWidth: 4200,
   /** How often a stroke in progress is pushed to the others, in ms. */
   streamEveryMs: 120,
+  /** How far in you can go. Past about this the map's own detail runs out. */
+  maxZoom: 8,
+  /** Wheel notch to zoom factor, and trackpad pan sensitivity. */
+  zoomPerWheel: 0.0022,
 };
 
 const mapImg = document.getElementById("map");
@@ -33,6 +37,7 @@ const ctx = canvas.getContext("2d");
 const undoButton = document.getElementById("undo");
 const clearButton = document.getElementById("clear");
 const saveButton = document.getElementById("save");
+const fitButton = document.getElementById("fit");
 const statusEl = document.getElementById("status");
 const overlay = document.getElementById("overlay");
 
@@ -167,8 +172,10 @@ function paintSpan(target, scale, stroke, i) {
 /** Paint whatever of this stroke has not been painted yet. */
 function paintPending(stroke) {
   const spans = pointCount(stroke) - 2;   // the span with a neighbour each side
-  for (let i = stroke.drawn; i < spans; i++) paintSpan(ctx, canvas.width, stroke, i);
-  if (spans > stroke.drawn) stroke.drawn = spans;
+  if (spans <= stroke.drawn) return;
+  useView(ctx);
+  for (let i = stroke.drawn; i < spans; i++) paintSpan(ctx, fitWidth, stroke, i);
+  stroke.drawn = spans;
 }
 
 /** Paint a stroke from scratch onto any context — used for redraws, for
@@ -180,9 +187,10 @@ function paintWhole(target, scale, stroke) {
 }
 
 function redrawAll() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  wipeCanvas();
+  useView(ctx);
   for (const stroke of strokes.values()) {
-    paintWhole(ctx, canvas.width, stroke);
+    paintWhole(ctx, fitWidth, stroke);
     stroke.drawn = Math.max(0, pointCount(stroke) - 1);
   }
   refreshButtons();
@@ -201,24 +209,101 @@ function scheduleRedraw() {
 }
 
 /* -------------------------------------------------------------------------- *
- *  Canvas sizing. The ink layer sits exactly on the map image.
+ *  The view: which part of the map is on screen.
+ *
+ *  Zooming by scaling the canvas in CSS would just magnify the pixels already
+ *  painted, and the ink would go soft exactly when someone leans in to look.
+ *  So the canvas stays the size of the window and the view is applied as a
+ *  transform on the context before painting — the strokes are re-rasterised at
+ *  the new scale, and stay as crisp at 6x as at fit. The map image is a real
+ *  image, so it just takes the same transform in CSS.
  * -------------------------------------------------------------------------- */
-function resize() {
-  // Keep the sheet shaped like whatever map is actually loaded.
-  if (mapImg.naturalWidth) {
-    document.getElementById("sheet").style.aspectRatio =
-      `${mapImg.naturalWidth} / ${mapImg.naturalHeight}`;
-  }
-  const r = mapImg.getBoundingClientRect();
-  if (!r.width) return;
-  const dpr = Math.min(window.devicePixelRatio || 1, 2);
-  const w = Math.round(r.width * dpr);
-  const h = Math.round(r.height * dpr);
-  if (canvas.width === w && canvas.height === h) return;
-  canvas.width = w;
-  canvas.height = h;
-  redrawAll();
+const view = { x: 0, y: 0, zoom: 1 };
+let fitWidth = 1;               // CSS px across the map at zoom 1
+let fitHeight = 1;
+let dpr = 1;
+
+/** Screen scale: CSS pixels per map-width unit. */
+const viewScale = () => fitWidth * view.zoom;
+
+function layout() {
+  if (!mapImg.naturalWidth) return;
+  dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+  const pad = parseFloat(getComputedStyle(document.documentElement)
+    .getPropertyValue("--pad")) || 16;
+  const chrome = pad * 2 + 46;                       // header above, tools below
+  const availableW = Math.max(120, innerWidth - pad * 2);
+  const availableH = Math.max(120, innerHeight - chrome * 2);
+  const ratio = mapImg.naturalWidth / mapImg.naturalHeight;
+
+  fitWidth = Math.min(availableW, availableH * ratio);
+  fitHeight = fitWidth / ratio;
+
+  mapImg.style.width = `${fitWidth}px`;
+  mapImg.style.height = `${fitHeight}px`;
+
+  canvas.width = Math.round(innerWidth * dpr);
+  canvas.height = Math.round(innerHeight * dpr);
+  canvas.style.width = `${innerWidth}px`;
+  canvas.style.height = `${innerHeight}px`;
+
+  clampView();
+  applyView();
 }
+
+/** Keep the sheet from being dragged away off screen. */
+function clampView() {
+  const w = fitWidth * view.zoom;
+  const h = fitHeight * view.zoom;
+  const slackX = Math.max(0, (w - innerWidth) / 2);
+  const slackY = Math.max(0, (h - innerHeight) / 2);
+  const restX = (innerWidth - w) / 2;
+  const restY = (innerHeight - h) / 2;
+  view.x = Math.min(restX + slackX, Math.max(restX - slackX, view.x));
+  view.y = Math.min(restY + slackY, Math.max(restY - slackY, view.y));
+}
+
+function applyView() {
+  mapImg.style.transform =
+    `translate(${view.x}px, ${view.y}px) scale(${view.zoom})`;
+  fitButton.hidden = view.zoom <= 1.001;
+  scheduleRedraw();
+}
+
+/** Put the canvas context into map space, so paint code can go on working in
+ *  map-width units and know nothing about panning or zooming. */
+function useView(target) {
+  target.setTransform(dpr, 0, 0, dpr, 0, 0);
+  target.translate(view.x, view.y);
+  target.scale(view.zoom, view.zoom);
+}
+
+function wipeCanvas() {
+  ctx.save();
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.restore();
+}
+
+function fitView() {
+  view.zoom = 1;
+  clampView();
+  applyView();
+}
+
+/** Zoom about a point on screen, so what is under the cursor stays under it. */
+function zoomAt(clientX, clientY, factor) {
+  const next = Math.min(CONFIG.maxZoom, Math.max(1, view.zoom * factor));
+  if (next === view.zoom) return;
+  const k = next / view.zoom;
+  view.x = clientX - (clientX - view.x) * k;
+  view.y = clientY - (clientY - view.y) * k;
+  view.zoom = next;
+  clampView();
+  applyView();
+}
+
 
 /* -------------------------------------------------------------------------- *
  *  Drawing
@@ -230,10 +315,10 @@ let smoothedWidth = 1;
 let lastPublish = 0;
 
 function toMap(e) {
-  const r = canvas.getBoundingClientRect();
-  // Both axes are divided by the width, so the units are square: a circle
+  // Both axes are divided by the map width, so the units are square: a circle
   // stays a circle, and the brush is the same size in x and y.
-  return { x: (e.clientX - r.left) / r.width, y: (e.clientY - r.top) / r.width };
+  const s = viewScale();
+  return { x: (e.clientX - view.x) / s, y: (e.clientY - view.y) / s };
 }
 
 function localId() {
@@ -241,6 +326,13 @@ function localId() {
 }
 
 canvas.addEventListener("pointerdown", (e) => {
+  if (wantsPan(e)) {
+    e.preventDefault();
+    canvas.setPointerCapture(e.pointerId);
+    panning = { id: e.pointerId, x: e.clientX, y: e.clientY };
+    canvas.classList.add("panning");
+    return;
+  }
   if (e.button !== 0 || active) return;
   canvas.setPointerCapture(e.pointerId);
   const p = toMap(e);
@@ -256,6 +348,15 @@ canvas.addEventListener("pointerdown", (e) => {
 });
 
 canvas.addEventListener("pointermove", (e) => {
+  if (panning && e.pointerId === panning.id) {
+    view.x += e.clientX - panning.x;
+    view.y += e.clientY - panning.y;
+    panning.x = e.clientX;
+    panning.y = e.clientY;
+    clampView();
+    applyView();
+    return;
+  }
   if (!active) return;
   const p = toMap(e);
 
@@ -307,9 +408,74 @@ function finishStroke() {
   refreshButtons();
 }
 
-canvas.addEventListener("pointerup", finishStroke);
-canvas.addEventListener("pointercancel", finishStroke);
-addEventListener("blur", finishStroke);
+function releasePointer(e) {
+  endPan(e);
+  finishStroke();
+}
+canvas.addEventListener("pointerup", releasePointer);
+canvas.addEventListener("pointercancel", releasePointer);
+addEventListener("blur", () => { endPan(); finishStroke(); });
+
+
+/* -------------------------------------------------------------------------- *
+ *  Getting around
+ *
+ *  Drawing owns the plain drag — it is what people are here to do — so moving
+ *  the map is on the gestures that are not drawing: pinch to zoom, two-finger
+ *  scroll to pan, and space or the middle button to drag it about. A trackpad
+ *  pinch reaches the browser as a wheel event with ctrlKey set, which is what
+ *  separates the two.
+ * -------------------------------------------------------------------------- */
+canvas.addEventListener("wheel", (e) => {
+  e.preventDefault();
+  if (e.ctrlKey || e.metaKey) {
+    zoomAt(e.clientX, e.clientY, Math.exp(-e.deltaY * CONFIG.zoomPerWheel * 4));
+  } else {
+    view.x -= e.deltaX;
+    view.y -= e.deltaY;
+    clampView();
+    applyView();
+  }
+}, { passive: false });
+
+let panning = null;
+let spaceHeld = false;
+
+/** Panning is checked inside the drawing handlers rather than in a separate
+ *  capture-phase listener: relying on capture to out-order a listener on the
+ *  same element is subtle enough to break quietly. */
+const wantsPan = (e) => e.button === 1 || (e.button === 0 && spaceHeld);
+
+const endPan = (e) => {
+  if (!panning || (e && e.pointerId !== panning.id)) return;
+  panning = null;
+  canvas.classList.remove("panning");
+};
+
+addEventListener("keydown", (e) => {
+  if (e.code === "Space" && !spaceHeld) {
+    spaceHeld = true;
+    canvas.classList.add("panready");
+    e.preventDefault();
+  }
+});
+addEventListener("keyup", (e) => {
+  if (e.code === "Space") {
+    spaceHeld = false;
+    canvas.classList.remove("panready");
+  }
+});
+addEventListener("blur", () => {
+  spaceHeld = false;
+  canvas.classList.remove("panready");
+});
+
+// Double-click anywhere to get the whole sheet back.
+canvas.addEventListener("dblclick", (e) => {
+  e.preventDefault();
+  fitView();
+});
+fitButton.addEventListener("click", fitView);
 
 /* -------------------------------------------------------------------------- *
  *  Undo, clear
@@ -494,6 +660,12 @@ function buildPdf(jpeg, pxWidth, pxHeight, mmWidth, mmHeight) {
 /* -------------------------------------------------------------------------- *
  *  Go
  * -------------------------------------------------------------------------- */
-addEventListener("resize", resize);
-if (mapImg.complete) resize(); else mapImg.addEventListener("load", resize);
+// The hint has done its job once the map has actually been handled.
+const hint = document.getElementById("hint");
+const dismissHint = () => hint.classList.add("gone");
+canvas.addEventListener("pointerdown", dismissHint, { once: true });
+canvas.addEventListener("wheel", dismissHint, { once: true, passive: true });
+
+addEventListener("resize", layout);
+if (mapImg.complete) layout(); else mapImg.addEventListener("load", layout);
 refreshButtons();

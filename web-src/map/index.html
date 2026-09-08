@@ -13,10 +13,8 @@
 <body>
 
 <div id="stage">
-  <div id="sheet">
-    <img id="map" src="../assets/map/karta-fb-screen.webp" alt="Karta över Främre Boländerna" draggable="false">
-    <canvas id="ink"></canvas>
-  </div>
+  <img id="map" src="../assets/map/karta-fb-screen.webp" alt="Karta över Främre Boländerna" draggable="false">
+  <canvas id="ink"></canvas>
 </div>
 
 <header id="topbar">
@@ -29,8 +27,12 @@
 <div id="tools">
   <button id="undo" type="button" disabled>Ångra</button>
   <button id="clear" type="button" disabled>Rensa allt</button>
+  <!-- Only offered once you are zoomed in and might want the whole sheet back. -->
+  <button id="fit" type="button" hidden>Anpassa</button>
   <button id="save" type="button">Spara PDF</button>
 </div>
+
+<p id="hint">Nyp för att zooma · mellanslag eller mitten­knappen för att flytta</p>
 
 <p id="status" aria-live="polite"></p>
 
