@@ -10,14 +10,34 @@
  *  and at print resolution. Strokes, not pixels, are what travels over the
  *  network and what the PDF is rebuilt from.
  * ========================================================================== */
-import { INK, makeDabCanvas, widthForSpeed, alphaForWidth, catmullRom } from "../brush.js";
+import { INK, widthForSpeed, streamline, strokeSides, seedFrom, tracePath } from "../brush.js";
 import { createSync } from "./sync.js";
 import printMapUrl from "../assets/map/karta-fb-print.jpg";
 
 const CONFIG = {
   /** Brush diameter as a fraction of the map's width, so it is the same mark
    *  relative to the map whatever size it is drawn at. */
-  brushSize: 0.011,
+  brushSize: 0.013,
+  color: "#000000",
+
+  /** How much the pen trails the cursor, 0–1. This is the flow control: at 0
+   *  the stroke follows every twitch of the hand, and around 0.6 it carries
+   *  through a gesture the way a loaded brush does. */
+  streamline: 0.58,
+  /** Minimum travel between recorded points, in map widths. Sampling by
+   *  distance rather than by event keeps the curve even at any hand speed. */
+  minSample: 0.0016,
+
+  /** Taper lengths, as multiples of the brush radius: a quick swell at the
+   *  press, a long run-out at the lift. */
+  taperStart: 2.2,
+  taperEnd: 6,
+
+  /** How much the edge wanders, and over what length. Enough that the outline
+   *  reads as cut by hand rather than offset by a machine. */
+  edgeNoise: 0.11,
+  edgeNoiseScale: 1.6,
+
   /** The sheet is A2 landscape, matching the printed map. */
   page: { widthMm: 594, heightMm: 420 },
   /** Print canvas width in pixels — 4200 over 594 mm is 180 dpi, plenty for a
@@ -41,163 +61,98 @@ const fitButton = document.getElementById("fit");
 const statusEl = document.getElementById("status");
 const overlay = document.getElementById("overlay");
 
-const dabCanvas = makeDabCanvas({ color: "0,0,0" });
-
-/* -------------------------------------------------------------------------- *
- *  Deterministic randomness.
- *
- *  The brush jitters — dry skips, specks, the load on each dab. If that came
- *  from Math.random every client would render the same stroke differently.
- *  Seeding per stroke id means everyone's screen, and the PDF, agree.
- * -------------------------------------------------------------------------- */
-function seedFrom(id) {
-  let h = 2166136261;
-  for (let i = 0; i < id.length; i++) {
-    h ^= id.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return h >>> 0;
-}
-
-function makeRng(seed) {
-  let a = seed || 1;
-  return () => {
-    a |= 0;
-    a = (a + 0x6d2b79f5) | 0;
-    let t = Math.imul(a ^ (a >>> 15), 1 | a);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
 
 /* -------------------------------------------------------------------------- *
  *  Strokes
  *
- *  A stroke is a flat list of x, y, width triples in map-width units. `drawn`
- *  is how many spans have already been stamped, so a stroke that is still
- *  arriving from someone else only ever paints its new part.
+ *  A stroke is a flat list of x, y, width triples in map-width units, and it
+ *  is drawn as one shape: an outline built around the path and filled once.
+ *  The previous brush stamped a texture along the path, which reads well small
+ *  but gives the edge a regular scallop at the stamp spacing — and zoomed in,
+ *  that periodicity is the only thing you see. An outline has nothing to
+ *  repeat, and is resolution-free.
  * -------------------------------------------------------------------------- */
-const strokes = new Map();      // id -> stroke
+const strokes = new Map();      // id -> stroke, in draw order
 let myStrokeIds = [];           // for undo: only ever my own
 
 function newStroke(id) {
-  return { id, pts: [], drawn: 0, carry: 0, dabs: 0, rng: makeRng(seedFrom(id)) };
+  return { id, pts: [], seed: seedFrom(id) };
 }
 
-function pointCount(stroke) {
-  return stroke.pts.length / 3;
-}
+const pointCount = (stroke) => stroke.pts.length / 3;
 
-/** A point of the stroke, clamped at the ends so the curve has controls to
- *  work with at the very start and finish. */
-function at(stroke, i, out) {
+/** The geometry of one stroke, in target units. Shared by the screen and by
+ *  the PDF, so the printed sheet is the same shape as what was drawn. */
+function strokeGeometry(stroke, scale) {
   const n = pointCount(stroke);
-  const k = Math.max(0, Math.min(n - 1, i)) * 3;
-  out.x = stroke.pts[k];
-  out.y = stroke.pts[k + 1];
-  out.w = stroke.pts[k + 2];
-  return out;
-}
+  if (n === 0) return null;
+  const radius = CONFIG.brushSize * scale * 0.5;
 
-const p0 = { x: 0, y: 0, w: 0 }, p1 = { x: 0, y: 0, w: 0 };
-const p2 = { x: 0, y: 0, w: 0 }, p3 = { x: 0, y: 0, w: 0 };
+  if (n < 2) {
+    return { dot: { x: stroke.pts[0] * scale, y: stroke.pts[1] * scale,
+      r: radius * stroke.pts[2] * 0.6 } };
+  }
 
-/** Stamp one dab. Positions are in map-width units; `scale` turns them into
- *  pixels on whichever canvas is being drawn to. */
-function dab(target, scale, x, y, width, angle, rng) {
-  const size = CONFIG.brushSize * scale * width;
-  if (size < 0.2) return;
-  target.save();
-  target.globalAlpha = alphaForWidth(width, INK, rng);
-  target.translate(x * scale, y * scale);
-  target.rotate(angle);
-  target.drawImage(dabCanvas,
-    (-size * INK.elongation) / 2, -size / 2, size * INK.elongation, size);
-  target.restore();
-}
-
-function spatter(target, scale, x, y, width, angle, rng) {
-  const n = 1 + Math.floor(rng() * 3);
+  const pts = new Float32Array(stroke.pts.length);
   for (let i = 0; i < n; i++) {
-    const spread = CONFIG.brushSize * width * (1.4 + rng() * 3.2);
-    const a = rng() * Math.PI * 2;
-    dab(target, scale, x + Math.cos(a) * spread, y + Math.sin(a) * spread,
-      width * (0.1 + rng() * 0.2), angle, rng);
+    pts[i * 3] = stroke.pts[i * 3] * scale;
+    pts[i * 3 + 1] = stroke.pts[i * 3 + 1] * scale;
+    pts[i * 3 + 2] = stroke.pts[i * 3 + 2];
   }
+
+  const sides = strokeSides(pts, {
+    radius,
+    taperStart: radius * CONFIG.taperStart,
+    taperEnd: radius * CONFIG.taperEnd,
+    noiseAmount: CONFIG.edgeNoise,
+    noiseScale: CONFIG.edgeNoiseScale,
+    seed: stroke.seed,
+  });
+  return sides ? { sides } : null;
 }
 
-/** Lay dabs along the curved span from point i to point i+1. */
-function paintSpan(target, scale, stroke, i) {
-  at(stroke, i - 1, p0); at(stroke, i, p1);
-  at(stroke, i + 1, p2); at(stroke, i + 2, p3);
+/** Draw one stroke. `scale` is how many units of the target there are across
+ *  the map, so the same stroke data serves the screen at any zoom and the
+ *  print sheet at 180 dpi. */
+function paintStroke(target, scale, stroke) {
+  const geo = strokeGeometry(stroke, scale);
+  if (!geo) return;
 
-  const chord = Math.hypot(p2.x - p1.x, p2.y - p1.y);
-  if (chord < 1e-7) return;
-
-  const width = p1.w;
-  const step = Math.max(CONFIG.brushSize * INK.spacing * width, 1e-5);
-  const sub = Math.max(6, Math.min(64, Math.ceil((chord / step) * 3)));
-
-  let px = p1.x, py = p1.y;
-  for (let k = 1; k <= sub; k++) {
-    const t = k / sub;
-    const cx = catmullRom(p0.x, p1.x, p2.x, p3.x, t);
-    const cy = catmullRom(p0.y, p1.y, p2.y, p3.y, t);
-    const cw = catmullRom(p0.w, p1.w, p2.w, p3.w, t);
-    const len = Math.hypot(cx - px, cy - py);
-    if (len > 1e-9) {
-      const dx = (cx - px) / len, dy = (cy - py) / len;
-      const angle = Math.atan2(dy, dx);
-      let travelled = step - stroke.carry;
-      while (travelled <= len) {
-        const open = Math.min(1, stroke.dabs / INK.taperDabs);
-        const w = Math.max(0.02, cw * (0.4 + 0.6 * open) * (0.9 + stroke.rng() * 0.2));
-        const dry = cw < 0.62 && stroke.rng() < INK.skipChance;
-        if (!dry) {
-          const x = px + dx * travelled, y = py + dy * travelled;
-          dab(target, scale, x, y, w, angle, stroke.rng);
-          if (stroke.rng() < INK.spatterChance) {
-            spatter(target, scale, x, y, w, angle, stroke.rng);
-          }
-        }
-        stroke.dabs += 1;
-        travelled += step;
-      }
-      stroke.carry = len - (travelled - step);
-    }
-    px = cx; py = cy;
+  // A tap with no travel is still a mark: a round blot.
+  if (geo.dot) {
+    target.beginPath();
+    target.arc(geo.dot.x, geo.dot.y, geo.dot.r, 0, Math.PI * 2);
+    target.fill();
+    return;
   }
+
+  target.beginPath();
+  tracePath(geo.sides, {
+    move: (x, y) => target.moveTo(x, y),
+    quad: (cx, cy, x, y) => target.quadraticCurveTo(cx, cy, x, y),
+    close: () => target.closePath(),
+  });
+  target.fill();
 }
 
-/** Paint whatever of this stroke has not been painted yet. */
-function paintPending(stroke) {
-  const spans = pointCount(stroke) - 2;   // the span with a neighbour each side
-  if (spans <= stroke.drawn) return;
-  useView(ctx);
-  for (let i = stroke.drawn; i < spans; i++) paintSpan(ctx, fitWidth, stroke, i);
-  stroke.drawn = spans;
-}
-
-/** Paint a stroke from scratch onto any context — used for redraws, for
- *  replaying what was already on the sheet, and for the PDF. */
-function paintWhole(target, scale, stroke) {
-  const replay = { ...stroke, carry: 0, dabs: 0, rng: makeRng(seedFrom(stroke.id)) };
-  const spans = pointCount(replay) - 1;
-  for (let i = 0; i < spans; i++) paintSpan(target, scale, replay, i);
+/** Everything, in order. One fill per stroke is cheap enough that there is no
+ *  need to track what has already been drawn — which also means a stroke that
+ *  is still arriving from someone else simply redraws as it grows. */
+function paintAll(target, scale) {
+  target.fillStyle = CONFIG.color;
+  for (const stroke of strokes.values()) paintStroke(target, scale, stroke);
 }
 
 function redrawAll() {
   wipeCanvas();
   useView(ctx);
-  for (const stroke of strokes.values()) {
-    paintWhole(ctx, fitWidth, stroke);
-    stroke.drawn = Math.max(0, pointCount(stroke) - 1);
-  }
+  paintAll(ctx, fitWidth);
   refreshButtons();
 }
 
-/** Clearing the sheet arrives as one removal per stroke, so a full redraw on
- *  each would be a hundred redraws. Collapse them into the next frame. */
+/** Every change redraws the sheet, so they are collapsed into the next frame:
+ *  clearing arrives as one removal per stroke, and a stroke in progress grows
+ *  on every pointer event. */
 let redrawQueued = false;
 function scheduleRedraw() {
   if (redrawQueued) return;
@@ -309,6 +264,7 @@ function zoomAt(clientX, clientY, factor) {
  *  Drawing
  * -------------------------------------------------------------------------- */
 let active = null;          // the stroke being drawn right now
+const pen = { x: 0, y: 0 };  // trails the cursor — see CONFIG.streamline
 let lastScreen = { x: 0, y: 0 };
 let lastTime = 0;
 let smoothedWidth = 1;
@@ -337,11 +293,13 @@ canvas.addEventListener("pointerdown", (e) => {
   canvas.setPointerCapture(e.pointerId);
   const p = toMap(e);
   active = newStroke(localId());
+  pen.x = p.x;
+  pen.y = p.y;
   smoothedWidth = 0.55;
   lastScreen = { x: e.clientX, y: e.clientY };
   lastTime = performance.now();
   lastPublish = 0;
-  active.pts.push(p.x, p.y, smoothedWidth);
+  active.pts.push(pen.x, pen.y, smoothedWidth);
   strokes.set(active.id, active);
   myStrokeIds.push(active.id);
   refreshButtons();
@@ -368,12 +326,18 @@ canvas.addEventListener("pointermove", (e) => {
   lastTime = now;
   lastScreen = { x: e.clientX, y: e.clientY };
 
+  // The pen chases the cursor rather than tracking it. This is what turns a
+  // shaky hand into a flowing gesture, and it costs a few milliseconds of lag.
+  streamline(pen, p, CONFIG.streamline);
+
   const n = pointCount(active);
   const lx = active.pts[(n - 1) * 3], ly = active.pts[(n - 1) * 3 + 1];
-  if (Math.hypot(p.x - lx, p.y - ly) < 1e-5) return;
+  // Sample by distance, not by event: a slow hand would otherwise pile up
+  // hundreds of points in one spot and stiffen the curve.
+  if (Math.hypot(pen.x - lx, pen.y - ly) < CONFIG.minSample) return;
 
-  active.pts.push(p.x, p.y, smoothedWidth);
-  paintPending(active);
+  active.pts.push(pen.x, pen.y, smoothedWidth);
+  scheduleRedraw();
 
   if (now - lastPublish > CONFIG.streamEveryMs) {
     lastPublish = now;
@@ -386,24 +350,19 @@ function finishStroke() {
   const stroke = active;
   active = null;
 
-  // Lift-off: a short tail that shrinks to nothing, the way a brush leaves.
+  // Let the pen catch up to where the hand actually stopped, so the stroke
+  // ends where it was released rather than a few pixels behind.
   const n = pointCount(stroke);
-  if (n >= 2) {
-    const ax = stroke.pts[(n - 2) * 3], ay = stroke.pts[(n - 2) * 3 + 1];
-    const bx = stroke.pts[(n - 1) * 3], by = stroke.pts[(n - 1) * 3 + 1];
-    const len = Math.hypot(bx - ax, by - ay);
-    if (len > 1e-6) {
-      const dx = (bx - ax) / len, dy = (by - ay) / len;
-      const step = CONFIG.brushSize * INK.spacing * smoothedWidth;
-      for (let i = 1; i <= INK.liftDabs; i++) {
-        const fade = 1 - i / (INK.liftDabs + 1);
-        stroke.pts.push(bx + dx * step * i, by + dy * step * i,
-          smoothedWidth * fade * fade * 0.8);
-      }
+  if (n >= 1) {
+    const lx = stroke.pts[(n - 1) * 3], ly = stroke.pts[(n - 1) * 3 + 1];
+    if (Math.hypot(pen.x - lx, pen.y - ly) > CONFIG.minSample * 0.5) {
+      stroke.pts.push(pen.x, pen.y, smoothedWidth);
     }
   }
-  paintPending(stroke);
-  stroke.drawn = Math.max(0, pointCount(stroke) - 1);
+
+  // No lift-off tail to add by hand any more: the outline's taper runs the
+  // stroke out to a point on its own, measured along the path.
+  scheduleRedraw();
   sync.publish(stroke.id, stroke.pts);
   refreshButtons();
 }
@@ -521,7 +480,7 @@ const sync = createSync({
     }
     if (pts.length <= stroke.pts.length) return;   // nothing new
     stroke.pts = pts;
-    paintPending(stroke);
+    scheduleRedraw();
     refreshButtons();
   },
 
@@ -569,12 +528,15 @@ async function savePdf() {
     sctx.fillStyle = "#ffffff";
     sctx.fillRect(0, 0, w, h);
     sctx.drawImage(print, 0, 0, w, h);
-    for (const stroke of strokes.values()) paintWhole(sctx, w, stroke);
 
+    // Only the map is rasterised. The ink goes in as real curves, so it stays
+    // sharp at whatever size the sheet is printed and costs a few kB instead
+    // of being baked into the image at 180 dpi.
     const jpeg = await new Promise((res) =>
       sheet.toBlob((b) => res(b), "image/jpeg", 0.92));
     const bytes = new Uint8Array(await jpeg.arrayBuffer());
-    const pdf = buildPdf(bytes, w, h, CONFIG.page.widthMm, CONFIG.page.heightMm);
+    const ink = inkAsPdfPaths(w, h, CONFIG.page.widthMm, CONFIG.page.heightMm);
+    const pdf = buildPdf(bytes, w, h, CONFIG.page.widthMm, CONFIG.page.heightMm, ink);
 
     const url = URL.createObjectURL(new Blob([pdf], { type: "application/pdf" }));
     const a = document.createElement("a");
@@ -595,6 +557,61 @@ async function savePdf() {
 }
 saveButton.addEventListener("click", savePdf);
 
+
+/** Every stroke as PDF path operators.
+ *
+ *  PDF has no quadratic curve, so each one is raised to the equivalent cubic —
+ *  the control points sit two thirds of the way from each end towards the
+ *  quadratic's control point, which is exact, not an approximation.
+ *
+ *  The page runs y upwards from the bottom left; the canvas runs y down from
+ *  the top. The image is laid over the whole page, so a point at pixel (px,py)
+ *  of the print canvas belongs at that same fraction of the page.
+ */
+function inkAsPdfPaths(pxWidth, pxHeight, mmWidth, mmHeight) {
+  const pageW = (mmWidth / 25.4) * 72;
+  const pageH = (mmHeight / 25.4) * 72;
+  const X = (px) => (px / pxWidth) * pageW;
+  const Y = (py) => pageH - (py / pxHeight) * pageH;
+  const f = (v) => (Math.round(v * 100) / 100).toString();
+
+  let out = "0 g\n";
+  for (const stroke of strokes.values()) {
+    const geo = strokeGeometry(stroke, pxWidth);
+    if (!geo) continue;
+
+    if (geo.dot) {
+      // A circle from four cubic arcs — the usual 0.5523 magic number.
+      const k = geo.dot.r * 0.5523;
+      const cx = geo.dot.x, cy = geo.dot.y, r = geo.dot.r;
+      out += `${f(X(cx - r))} ${f(Y(cy))} m\n`;
+      out += `${f(X(cx - r))} ${f(Y(cy - k))} ${f(X(cx - k))} ${f(Y(cy - r))} ${f(X(cx))} ${f(Y(cy - r))} c\n`;
+      out += `${f(X(cx + k))} ${f(Y(cy - r))} ${f(X(cx + r))} ${f(Y(cy - k))} ${f(X(cx + r))} ${f(Y(cy))} c\n`;
+      out += `${f(X(cx + r))} ${f(Y(cy + k))} ${f(X(cx + k))} ${f(Y(cy + r))} ${f(X(cx))} ${f(Y(cy + r))} c\n`;
+      out += `${f(X(cx - k))} ${f(Y(cy + r))} ${f(X(cx - r))} ${f(Y(cy + k))} ${f(X(cx - r))} ${f(Y(cy))} c\nh f\n`;
+      continue;
+    }
+
+    let cur = { x: 0, y: 0 };
+    tracePath(geo.sides, {
+      move: (x, y) => {
+        cur = { x, y };
+        out += `${f(X(x))} ${f(Y(y))} m\n`;
+      },
+      quad: (cx, cy, x, y) => {
+        const c1x = cur.x + (2 / 3) * (cx - cur.x);
+        const c1y = cur.y + (2 / 3) * (cy - cur.y);
+        const c2x = x + (2 / 3) * (cx - x);
+        const c2y = y + (2 / 3) * (cy - y);
+        out += `${f(X(c1x))} ${f(Y(c1y))} ${f(X(c2x))} ${f(Y(c2y))} ${f(X(x))} ${f(Y(y))} c\n`;
+        cur = { x, y };
+      },
+      close: () => { out += "h f\n"; },
+    });
+  }
+  return out;
+}
+
 /** A single-page PDF holding one JPEG, written by hand.
  *
  *  A whole PDF library would be ~350 kB for one button, and everything here is
@@ -602,7 +619,7 @@ saveButton.addEventListener("click", savePdf);
  *  A one-image page is a small, well-trodden corner of the format: the JPEG
  *  goes in untouched as a DCTDecode stream, and the page is sized in points so
  *  it prints at exactly A2. */
-function buildPdf(jpeg, pxWidth, pxHeight, mmWidth, mmHeight) {
+function buildPdf(jpeg, pxWidth, pxHeight, mmWidth, mmHeight, extraContent = "") {
   const pageW = (mmWidth / 25.4) * 72;
   const pageH = (mmHeight / 25.4) * 72;
   const parts = [];
@@ -639,7 +656,7 @@ function buildPdf(jpeg, pxWidth, pxHeight, mmWidth, mmHeight) {
   push(jpeg);
   text("\nendstream\nendobj\n");
 
-  const content = `q ${pageW.toFixed(2)} 0 0 ${pageH.toFixed(2)} 0 0 cm /Im0 Do Q\n`;
+  const content = `q ${pageW.toFixed(2)} 0 0 ${pageH.toFixed(2)} 0 0 cm /Im0 Do Q\n` + extraContent;
   startObject(5);
   text(`5 0 obj\n<< /Length ${content.length} >>\nstream\n${content}endstream\nendobj\n`);
 

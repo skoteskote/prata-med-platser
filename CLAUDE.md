@@ -110,10 +110,20 @@ på kartan i stället för på scanningen. Ligger som **egen sida**, inte som en
 route i vyaren, så att den aldrig drar in three.js eller den 30 MB stora
 splatten. Länkas inte från menyn och är `noindex`.
 
-- **`web-src/brush.js`** — penseln. Delas av vyaren (3D, stämplar som
-  instansierade quads) och kartan (2D, stämplar rakt på en canvas).
-  Renderarna har inget gemensamt; penselkänslan har det. Ändra den här, så
-  följer båda med.
+- **`web-src/brush.js`** — penseln. Två sätt att rita bläck bor här:
+  *stämpling* (vyaren, instansierade quads i 3D) och *kontur* (kartan). En
+  stämpel som upprepas med fast mellanrum ger märket en regelbundet vågig kant,
+  och inzoomat är den periodiciteten det enda man ser — därför ritas kartans
+  streck i stället som **en enda form**: en kontur med varierande bredd runt
+  banan, fylld en gång. Då finns ingenting att upprepa, och formen är
+  upplösningsfri.
+- **Flytet** kommer från `streamline`: pennan följer efter markören genom en
+  fjäder i stället för att spåra den exakt. Det är den enskilt största
+  skillnaden mellan ett darrigt och ett flytande streck. `CONFIG.streamline` på
+  kartan, 0–1.
+- `tracePath` går båda renderarna igenom — skärmen och PDF:en ritar exakt samma
+  form, så det som skrivs ut är det som ritades, inte en andra implementation
+  som måste hållas i takt.
 - **`web-src/map/`** — sidan. `map.js` ritar och exporterar PDF, `sync.js`
   sköter delningen, `firebase-config.js` innehåller nycklarna.
 - Ett streck är en platt `[x, y, bredd, …]`-array i **kartbredder** — båda
@@ -123,9 +133,12 @@ splatten. Länkas inte från menyn och är `noindex`.
 - Slumpen i penseln (torra hopp, stänk) är **seedad per streck-id**, så alla
   deltagares skärmar och PDF:en ritar exakt samma bläck.
 - PDF:en byggs för hand — ett PDF-bibliotek hade varit ~350 kB för en knapp.
-  En ensidig PDF med en JPEG är ett litet, väl upptrampat hörn av formatet.
   Sidan är A2 liggande (1683,78 × 1190,55 pt) för att matcha den tryckta
-  kartan. Kontrollera med `qpdf --check` och `pdfinfo` efter ändringar.
+  kartan. **Kartan är en rasterbild, bläcket är riktiga kurvor**: PDF saknar
+  kvadratiska kurvor, så varje sådan höjs till motsvarande kubiska (styrpunkter
+  två tredjedelar in — exakt, inte en approximation). Utskriften blir skarp i
+  vilken storlek som helst, och filen mindre än när bläcket brändes in i
+  JPEG:en. Kontrollera med `qpdf --check` och `pdfinfo` efter ändringar.
 - **Zoom och panorering** ligger som en transform, inte som CSS-skalning av
   canvasen: strecken ritas om i den nya skalan, så bläcket är lika skarpt vid
   8x som vid anpassad vy. Nyp (ctrl+hjul) zoomar, tvåfingerskroll panorerar,
