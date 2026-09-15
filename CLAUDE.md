@@ -33,7 +33,7 @@ fungerar också, men mappnamn upprepas mellan projekt.
 
 ### Filer som hör ihop med sajten
 
-- **`Docs / Hemsida / Hemsida – alla texter`** — doc `1_BOk6gf20p2ZwVFd8cf5HRVz2ZFHAi22k7cvMs_gk8I`.
+- **`Docs / Hemsida / Hemsida – alla texter`** — doc `1sRZFoMUJHtr5QtHhYqOw6Ly-QWewU1uNtCNtgU56ync`.
   Alla sajtens texter, strukturerade så att Love och Rosa kan redigera dem utan
   att öppna kod. **Håll den i synk när text på sajten ändras**, och vice versa.
 - **`Resources / Prata med platser Logo / prata-m-platser.jpg`** — fil
