@@ -289,6 +289,26 @@ body[data-route="schema"] #topbar::before {
 
 .page em { font-style: italic; }
 
+/* The four sessions, tight under the lead — a date list, not a timeline. */
+.sessions {
+  list-style: none;
+  margin: 1.5rem 0 0;
+  padding: 0;
+  max-width: 26rem;
+}
+.sessions li {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0 1.2rem;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid var(--ink-hairline);
+}
+.sessions li:last-child { border-bottom: 0; }
+.sessions b { font-weight: 500; }
+.sessions span { color: var(--ink-soft); }
+.sessions .tbd { font-style: italic; opacity: 0.75; }
+
 .questions {
   list-style: none;
   margin: 0 0 1.2rem;
