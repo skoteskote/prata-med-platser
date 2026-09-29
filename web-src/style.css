@@ -516,6 +516,36 @@ body[data-route="schema"] #hud:hover { opacity: 1; }
 body[data-route="om"] #hint,
 body[data-route="schema"] #hint { opacity: 0; }
 
+/* Anmälan till nästa workshop. Fylld, till skillnad från den konturade
+   Kontakt-knappen, så att den läses som *den* sak man ska göra. Sitter nere i
+   mitten: bläckknapparna äger vänsterkanten och hinten högerkanten. */
+#cta {
+  position: fixed;
+  z-index: 25;
+  left: 50%;
+  bottom: var(--pad);
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.95rem;
+  font-weight: 500;
+  text-decoration: none;
+  color: var(--bg);
+  background: var(--ink);
+  padding: 0.55rem 1.25rem;
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  white-space: nowrap;
+  transition: background 0.22s var(--ease), color 0.22s var(--ease),
+              opacity 0.5s var(--ease);
+}
+#cta:hover { background: transparent; color: var(--ink); }
+#cta .ext { opacity: 0.7; }
+
+/* Bara på startsidan — textsidorna har sina egna inbjudningar. */
+body[data-route="om"] #cta,
+body[data-route="schema"] #cta { opacity: 0; pointer-events: none; }
+
 /* --------------------------------------------------------------------------
    Loading
    -------------------------------------------------------------------------- */
@@ -619,6 +649,14 @@ body[data-route="schema"] #hint { opacity: 0; }
   .nav-link, .nav-btn { font-size: 0.9rem; }
   .page-inner { padding-top: calc(var(--pad) * 2 + 7.5rem); }
   #hint { display: none; }
+
+  /* Bläckknapparna sitter kvar nere till vänster på startsidan, så knappen
+     lyfts upp ovanför dem i stället för att lägga sig över. */
+  #cta {
+    font-size: 0.9rem;
+    padding: 0.5rem 1.05rem;
+    bottom: calc(var(--pad) + 2.9rem);
+  }
 
   /* No margins to drag at this width — the text column fills the screen — so
      the controls button would only sit on top of the prose. It stays on the
