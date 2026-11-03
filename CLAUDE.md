@@ -61,10 +61,10 @@ fungerar också, men mappnamn upprepas mellan projekt.
 `www` som CNAME till `skoteskote.github.io`). Workflowet skriver en `CNAME`-fil
 i artefakten vid varje deploy, så en publicering aldrig tappar domänen.
 
-**HTTPS var inte utfärdat än** när domänen kopplades in — GitHub beställer ett
-Let's Encrypt-certifikat automatiskt när DNS stämmer, vilket kan ta upp till ett
-dygn. När `https://pratamedplatser.se` svarar: kryssa i **Enforce HTTPS** under
-Settings → Pages. Kontrollera med:
+**HTTPS är utfärdat och tvingat** sedan 18 september 2026. Certifikatet är ett
+Let's Encrypt som GitHub beställde automatiskt när DNS stämde, och
+`https_enforced` är påslaget — http går numera vidare till https. Kontrollera
+med:
 
 ```sh
 gh api repos/skoteskote/prata-med-platser/pages --jq '{cname, https_enforced}'
