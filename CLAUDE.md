@@ -148,6 +148,25 @@ splatten. Länkas inte från menyn och är `noindex`.
   som webp (~160 kB), tryckversion som jpg (4200 px = 180 dpi) som bara hämtas
   när någon trycker Spara.
 
+### Volymetrisk video (`/video/`)
+
+Workshop-inspelningar (Metavido, iPhone) som levande 3D i webbläsaren. Egen
+Vite-ingång som `/map/`: three.js men aldrig Spark eller splatten. Olänkad och
+`noindex`. Bakgrund och beslut i `METAVIDO.md`, vad som byggdes och hur det
+står till i `METAVIDO_VIEWER_NOTES.md`.
+
+- **`web-src/video/`** — `metavido.js` avkodar ruta för ruta på GPU:n
+  (djup, stencil, färg, kantskärpning), `layers.js` ritar (punkter, splats,
+  rummets minne, spår), `video.js` är sidan.
+- **Klippen** ligger i `web/assets/video/` och går aldrig genom Vite. Görs med
+  `scripts/metavido_clip.py`, som också skriver posen per ruta ur
+  **källfilens** streckkod (omkodningen vänder enstaka bitar).
+  `scripts/metavido_check.py` mäter skala och golv, `metavido_sync.py` och
+  `metavido_fuse.py` lägger två telefoner i samma rum.
+- Under `npx vite` serveras `web/assets/` av en liten mellanvara i
+  `vite.config.js`, med byte ranges så att videon går att spola.
+  `python3 -m http.server` klarar inte ranges: titta med `npx vite preview`.
+
 ### Delningen — inkopplad
 
 Projektet **`prata-med-platser`** (nummer `786738775900`), databasen i

@@ -8,7 +8,8 @@ splat-scanningen?
 webbrenderare att låna. Allt nedan är verifierat mot en riktig inspelning,
 `Record_0911_1716_25_av_small.mp4` (209 MB, 1920×1080, 60 fps, 10 min 11 s).
 
-Ingenting av det här är byggt än — dokumentet är underlag för beslut.
+Dokumentet var underlag för beslut. En första vyare är nu byggd på grenen
+`metavido-viewer` — se `METAVIDO_VIEWER_NOTES.md`.
 
 ---
 
