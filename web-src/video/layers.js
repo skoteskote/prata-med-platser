@@ -35,6 +35,7 @@ function commonUniforms() {
     uPeople: { value: new THREE.Vector4(1, 1, 1, 1) },
     uDepthBias: { value: 0.015 },
     uOpacity: { value: 1 },
+    uTint: { value: new THREE.Color(1, 1, 1) },
   };
 }
 
@@ -131,6 +132,7 @@ uniform vec4 uPeople;
 uniform float uDepthBias;
 uniform float uOpacity;
 uniform int uWhy;   // debug: tint edge samples (snapped magenta / dropped red), people green
+uniform vec3 uTint;
 out vec3 vColor;
 out float vWeight;
 #ifdef PRIM_SURFEL
@@ -150,7 +152,7 @@ void main() {
   bool person = s.stencil > 0.5;
   bool ok = s.ok && mtvdHash(vec2(q)) < (person ? 1.0 : uPeople.z);
   float size = uSize * (person ? uPeople.w : 1.0);
-  vColor = mtvdColor(s.uv) * (person ? uPeople.x : uPeople.y);
+  vColor = mtvdColor(s.uv) * (person ? uPeople.x : uPeople.y) * uTint;
   vWeight = uOpacity;
   if (uWhy == 1) {
     if (s.edge) vColor = uEdgeMode == 2 ? vec3(1.0, 0.2, 1.0) : vec3(1.0, 0.1, 0.1);

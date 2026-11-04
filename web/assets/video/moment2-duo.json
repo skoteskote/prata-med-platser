@@ -1,0 +1,50 @@
+{
+ "format": "pratamedplatser.metavido.scene",
+ "version": 1,
+ "space": "the primary clip's world (three.js, Y up, metres)",
+ "clips": [
+  {
+   "name": "moment2-16pro",
+   "transform": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  },
+  {
+   "name": "moment2-12pro",
+   "transform": [
+    0.480109,
+    0.006422,
+    -0.877185,
+    0.0,
+    -0.000165,
+    0.999974,
+    0.007231,
+    0.0,
+    0.877209,
+    -0.003327,
+    0.480098,
+    0.0,
+    0.029961,
+    0.092961,
+    -0.32533,
+    1.0
+   ],
+   "via": "marker"
+  }
+ ]
+}

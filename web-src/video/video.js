@@ -11,6 +11,16 @@ const CONFIG = {
   clip: "../assets/video/moment2-16pro",
   caption: "Workshop 1, moment 2 · iPhone 16 Pro",
 
+  /** "Två telefoner": the same 26 seconds as filmed by the other phone, put
+   *  into this clip's world through the printed marker both phones saw
+   *  (scripts/metavido_fuse.py), cut at the audio-synced offset
+   *  (scripts/metavido_sync.py). */
+  duo: {
+    scene: "../assets/video/moment2-duo.json",
+    dir: "../assets/video/",
+    caption: "Workshop 1, moment 2 · iPhone 16 Pro och 12 Pro",
+  },
+
   fov: 55,
   near: 0.03,
   far: 60,
@@ -79,6 +89,7 @@ const state = {
   res: Math.max(1, +params.get("res") || (mobile ? 2 : 1)),
   debug: params.has("debug"),
   follow: flag("follow", false),
+  duo: flag("duo", false),
 };
 
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: "high-performance" });
@@ -99,7 +110,9 @@ controls.maxDistance = 25;
 
 const splats = new Splats();
 let clip, live, memory, trails, probe;
-const layers = () => [memory, live, trails].filter(Boolean);
+/** The second phone, when "Två telefoner" is on: { clip, live, transform, gizmo }. */
+let duo = null, duoLoading = null;
+const layers = () => [memory, live, duo?.live, trails].filter(Boolean);
 
 /* ---------------------------------------------------------------- startup */
 
@@ -110,7 +123,7 @@ async function start() {
   $("scrub").max = String(clip.frames - 1);
 
   buildLive();
-  buildRecorderGizmo();
+  gizmo = makeGizmo(clip);
   startView();
   applyState();
   if (state.debug) probe = new Probe(clip);
@@ -127,16 +140,74 @@ async function start() {
   requestAnimationFrame(loop);
 }
 
-function buildLive() {
-  live?.dispose();
-  if (live) scene.remove(live.object);
+function makeLive(c, matrix) {
   const look = CONFIG.looks[state.look];
-  live = new LiveLayer(clip, { primitive: look.primitive, step: look.step * state.res });
-  scene.add(live.object);
-  const u = live.uniforms;
-  u.uSize.value = look.size;
-  u.uSharp.value = look.sharp ?? 2.5;
-  tuneCommon(live);
+  const l = new LiveLayer(c, { primitive: look.primitive, step: look.step * state.res });
+  if (matrix) {
+    l.object.matrix.copy(matrix);
+    l.object.matrixWorldNeedsUpdate = true;
+  }
+  scene.add(l.object);
+  // ?tint: colour each phone's points (16 Pro orange, 12 Pro blue), to judge the alignment.
+  if (params.has("tint")) l.uniforms.uTint.value.set(...(matrix ? [0.35, 0.7, 1.4] : [1.4, 0.75, 0.3]));
+  l.uniforms.uSize.value = look.size;
+  l.uniforms.uSharp.value = look.sharp ?? 2.5;
+  tuneCommon(l);
+  return l;
+}
+
+function buildLive() {
+  if (live) { scene.remove(live.object); live.dispose(); }
+  live = makeLive(clip);
+  if (duo) {
+    scene.remove(duo.live.object);
+    duo.live.dispose();
+    duo.live = makeLive(duo.clip, duo.transform);
+  }
+}
+
+/* ------------------------------------------------------- the second phone */
+
+async function loadDuo() {
+  const res = await fetch(CONFIG.duo.scene);
+  if (!res.ok) throw new Error(`${CONFIG.duo.scene}: HTTP ${res.status}`);
+  const sceneInfo = await res.json();
+  const entry = sceneInfo.clips[1];
+  const c = await Clip.load(CONFIG.duo.dir + entry.name);
+  const transform = new THREE.Matrix4().fromArray(entry.transform);
+  if (!state.duo) { c.dispose(); return; }   // switched off while loading
+  duo = { clip: c, transform, live: makeLive(c, transform), gizmo: makeGizmo(c, transform) };
+  c.video.playbackRate = clip.video.playbackRate;
+  c.seekFrame(clip.frame);
+  if (!clip.video.paused) c.video.play().catch(() => {});
+  applyState();
+}
+
+function dropDuo() {
+  if (!duo) return;
+  scene.remove(duo.live.object);
+  duo.live.dispose();
+  for (const o of [duo.gizmo.frustum, duo.gizmo.path]) { overlay.remove(o); o.geometry.dispose(); o.material.dispose(); }
+  duo.clip.dispose();
+  duo = null;
+}
+
+/** Keep the second video on the first one's clock: nudge the rate for small
+ *  drift, seek for large, mirror play/pause. Both snippets are 780 frames of
+ *  the same 26 seconds, so frame n of one is frame n of the other. */
+function syncDuo() {
+  if (!duo) return;
+  const a = clip.video, b = duo.clip.video;
+  if (a.paused !== b.paused) a.paused ? b.pause() : b.play().catch(() => {});
+  if (a.paused) {
+    if (duo.clip.frame !== clip.frame && !b.seeking) duo.clip.seekFrame(clip.frame);
+    return;
+  }
+  let drift = a.currentTime - b.currentTime;
+  if (drift > clip.duration / 2) drift -= clip.duration;   // one has looped already
+  if (drift < -clip.duration / 2) drift += clip.duration;
+  if (Math.abs(drift) > 0.25) { b.currentTime = a.currentTime; b.playbackRate = a.playbackRate; }
+  else b.playbackRate = a.playbackRate * (1 + THREE.MathUtils.clamp(drift * 0.8, -0.08, 0.08));
 }
 
 function tuneCommon(layer) {
@@ -148,7 +219,8 @@ function tuneCommon(layer) {
   u.uWhy.value = state.why ? 1 : 0;
   u.uDepthBias.value = CONFIG.depthBias;
   const p = CONFIG.people;
-  if (state.people) u.uPeople.value.set(p.peopleGain, p.roomGain, layer === live ? p.roomKeep : 1, layer === live ? p.peopleSize : 1);
+  const isLive = layer instanceof LiveLayer;
+  if (state.people) u.uPeople.value.set(p.peopleGain, p.roomGain, isLive ? p.roomKeep : 1, isLive ? p.peopleSize : 1);
   else u.uPeople.value.set(1, 1, 1, 1);
 }
 
@@ -176,22 +248,30 @@ function buildTrails() {
 
 /* ------------------------------------------------- the phone that filmed */
 
-let gizmo, pathLine;
-function buildRecorderGizmo() {
-  // A small frustum, 16:9, 18 cm deep, in the phone's own frame.
-  const d = 0.18, t = Math.tan(clip.side.fov[0] / 2) * d, w = t * 16 / 9;
-  const c = [[-w, -t], [w, -t], [w, t], [-w, t]];
+let gizmo;
+/** A small frustum (16:9, 18 cm deep) that follows the phone, and its path. */
+function makeGizmo(c, transform = new THREE.Matrix4()) {
+  const d = 0.18, t = Math.tan(c.side.fov[0] / 2) * d, w = t * 16 / 9;
+  const k = [[-w, -t], [w, -t], [w, t], [-w, t]];
   const v = [];
-  for (const [x, y] of c) v.push(0, 0, 0, x, y, -d);
-  for (let i = 0; i < 4; i++) v.push(...c[i], -d, ...c[(i + 1) % 4], -d);
+  for (const [x, y] of k) v.push(0, 0, 0, x, y, -d);
+  for (let i = 0; i < 4; i++) v.push(...k[i], -d, ...k[(i + 1) % 4], -d);
   v.push(-w * 0.4, t, -d, 0, t * 1.5, -d, 0, t * 1.5, -d, w * 0.4, t, -d);  // "up" tick
   const g = new THREE.BufferGeometry().setAttribute("position", new THREE.Float32BufferAttribute(v, 3));
-  gizmo = new THREE.LineSegments(g, new THREE.LineBasicMaterial({ color: 0xf4f2ec, transparent: true, opacity: 0.4 }));
-  gizmo.matrixAutoUpdate = false;
-  overlay.add(gizmo);
-  const pg = new THREE.BufferGeometry().setAttribute("position", new THREE.Float32BufferAttribute(clip.side.p, 3));
-  pathLine = new THREE.Line(pg, new THREE.LineBasicMaterial({ color: 0xf4f2ec, transparent: true, opacity: 0.14 }));
-  overlay.add(pathLine);
+  const frustum = new THREE.LineSegments(g, new THREE.LineBasicMaterial({ color: 0xf4f2ec, transparent: true, opacity: 0.4 }));
+  frustum.matrixAutoUpdate = false;
+  const pg = new THREE.BufferGeometry().setAttribute("position", new THREE.Float32BufferAttribute(c.side.p, 3));
+  const path = new THREE.Line(pg, new THREE.LineBasicMaterial({ color: 0xf4f2ec, transparent: true, opacity: 0.14 }));
+  path.matrixAutoUpdate = false;
+  path.matrix.copy(transform);
+  overlay.add(frustum, path);
+  const gz = { frustum, path, transform, update(f) {
+    frustum.matrix.multiplyMatrices(transform, c.camToWorld);
+    frustum.matrixWorldNeedsUpdate = true;
+    path.matrixWorldNeedsUpdate = true;
+  } };
+  gz.update(0);
+  return gz;
 }
 
 /* ------------------------------------------------------------------ views */
@@ -246,13 +326,20 @@ function applyState() {
   const splat = CONFIG.looks[state.look].splat;
   for (const l of [memory, trails]) if (l) l.uniforms.uSize.value = splat ? 2.0 : 1.0;
 
-  gizmo.visible = pathLine.visible = state.camera && !state.follow;
+  for (const g of [gizmo, duo?.gizmo]) if (g) g.frustum.visible = g.path.visible = state.camera && !state.follow;
+
+  if (state.duo && !duo && !duoLoading) {
+    duoLoading = loadDuo().catch(err => { console.error(err); state.duo = false; applyState(); })
+      .finally(() => { duoLoading = null; });
+  }
+  if (!state.duo && duo) dropDuo();
+  $("caption").textContent = duo ? CONFIG.duo.caption : CONFIG.caption;
   $("debug").hidden = !state.debug;
 
   // Keep the URL in step, without piling up history.
   const q = new URLSearchParams();
   if (state.look !== "punkter") q.set("look", state.look);
-  for (const k of ["people", "memory", "trails", "follow"]) if (state[k]) q.set(k, "1");
+  for (const k of ["people", "memory", "trails", "follow", "duo"]) if (state[k]) q.set(k, "1");
   if (!state.camera) q.set("camera", "0");
   if (state.edges !== "snap") q.set("edges", state.edges);
   if (state.why) q.set("why", "");
@@ -387,6 +474,11 @@ function loop(now) {
   requestAnimationFrame(loop);
   if (contextLost) return;
   clip.poll();
+  if (duo) {
+    duo.clip.poll();
+    syncDuo();
+    if (duo.clip.serial !== duo.serial) { duo.serial = duo.clip.serial; duo.gizmo.update(); }
+  }
   if (timer) gpuPoll();
   const query = gpuBegin();
   if (canvas.width !== Math.floor(innerWidth * renderer.getPixelRatio())) resize();
@@ -441,8 +533,7 @@ const _v2 = new THREE.Vector2();
 
 function onNewFrame() {
   const f = clip.frame;
-  gizmo.matrix.copy(clip.camToWorld);
-  gizmo.matrixWorldNeedsUpdate = true;
+  gizmo.update();
 
   if (memory) {
     const slot = Math.floor(f / memory.every) % memory.slots;
@@ -485,6 +576,7 @@ function fmt(t) {
 window.__mv = {
   get clip() { return clip; }, state, camera, controls, renderer, applyState, buildLive, startView,
   get probe() { return probe; },
+  get duo() { return duo; },
   get fps() { return { fps, vfps, gpuMs, readyMs, firstFrameMs }; },
   setView(pos, target, fov = CONFIG.fov) {
     state.follow = false; applyState();
