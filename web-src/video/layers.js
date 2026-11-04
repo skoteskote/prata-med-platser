@@ -226,6 +226,10 @@ void main() {
   MtvdSample s = mtvdSample(q, float(uStep));
   bool person = s.stencil > 0.5;
   bool want = uWho == 2 || ((uWho == 1) == person);
+  // The room memory keeps only what is surely room: next to a silhouette the
+  // colour is often still the person's, and kept for the whole clip that
+  // draws dark outlines of everyone onto the walls.
+  if (uWho == 0 && (s.edge || s.boundary)) want = false;
   if (!s.ok || !want) { gl_FragColor = vec4(0.0); return; }
   vec3 c = floor(clamp(mtvdColor(s.uv), 0.0, 1.0) * 255.0 + 0.5);
   float packed = c.r * 65536.0 + c.g * 256.0 + c.b + 1.0;

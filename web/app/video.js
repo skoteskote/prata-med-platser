@@ -60,6 +60,7 @@ struct MtvdSample {
   float slope;    // tan of the angle between surface normal and view ray
   vec2 uv;
   bool edge;      // on a depth ramp (before uEdgeMode is applied)
+  bool boundary;  // within BOUNDARY_PX of a stencil edge
   bool ok;
 };
 
@@ -91,8 +92,13 @@ const int EDGE_PX = 4;
 const int CURVE_PX = 12;
 const vec2 SNAP_DIRS[8] = vec2[8](vec2(1.0, 0.0), vec2(0.7071, 0.7071), vec2(0.0, 1.0), vec2(-0.7071, 0.7071),
                                   vec2(-1.0, 0.0), vec2(-0.7071, -0.7071), vec2(0.0, -1.0), vec2(0.7071, -0.7071));
-const float SNAP_R[4] = float[4](6.0, 14.0, 24.0, 36.0);
-float mtvdSnap(ivec2 q, float z, float stencil) {
+// The ring reaches 48 px: a background sample just outside a silhouette has to
+// look past the whole 30-40 px of ramp to find the wall behind.
+const float SNAP_R[4] = float[4](8.0, 18.0, 32.0, 48.0);
+// weak: the sample is only moderately steep. That is a ramp if a person is
+// near (they are what the ramps form around), and could equally be a floor
+// seen at a grazing angle if not, so then it is left alone.
+float mtvdSnap(ivec2 q, float z, float stencil, bool weak) {
   float zmin = 1e9, zmax = -1e9, pmin = 1e9, bmin = 1e9, bmax = -1e9;
   bool nearPerson = false;
   for (int r = 0; r < 4; r++) {
@@ -105,6 +111,7 @@ float mtvdSnap(ivec2 q, float z, float stencil) {
       else { bmin = min(bmin, zz); bmax = max(bmax, zz); }
     }
   }
+  if (weak && !nearPerson) return z;
   // A person sample is only moved if it sits clearly behind the person's
   // nearest depth around it (pulled back by the ramp), not for the few
   // centimetres a body curves away from the camera.
@@ -114,6 +121,7 @@ float mtvdSnap(ivec2 q, float z, float stencil) {
 }
 
 const int BOUNDARY_PX = 10;
+const int BLEED_PX = 5;      // how far the person's colour reaches past the stencil
 MtvdSample mtvdSample(ivec2 q, float cell) {
   MtvdSample s;
   float z = mtvdDepth(q);
@@ -135,7 +143,9 @@ MtvdSample mtvdSample(ivec2 q, float cell) {
     boundary = boundary || (mtvdStencil(q + b) > 0.5) != person || (mtvdStencil(q - b) > 0.5) != person;
   }
   bool edge = s.slope >= uEdge || curv >= uCurve;
+  bool weakEdge = !edge && s.slope >= 0.5 * uEdge;
   s.edge = edge;
+  s.boundary = boundary;
   // Geometry from central differences, and the depth itself lightly smoothed
   // (a 5-tap plus): the hue encoding quantises depth to ~6 mm, which shows as
   // shingles on oblique surfaces otherwise. Planes are unaffected, being
@@ -145,8 +155,19 @@ MtvdSample mtvdSample(ivec2 q, float cell) {
   // Person samples near their silhouette are checked even when they look
   // smooth: the ramp bleeds a few pixels into the stencil, and a gentle start
   // of it passes both tests. Background samples are only moved when on a ramp.
-  if (uEdgeMode == 2 && (edge || (boundary && person))) {
-    float zs = mtvdSnap(q, z, s.stencil);
+  bool colourBleed = false;
+  if (uEdgeMode == 2 && (edge || weakEdge || (boundary && person))) {
+    float zs = mtvdSnap(q, z, s.stencil, !edge);
+    // A background sample right outside a silhouette, moved back onto the
+    // wall, still has the person's colour (the stencil sits a few pixels
+    // inside the person in the colour image): left in, it paints a dark
+    // outline of everyone onto the wall. Those few are dropped instead.
+    if (!person && boundary && zs > z + 0.2) {
+      for (int a = 0; a < 4; a++) {
+        ivec2 b = ivec2(round(SNAP_DIRS[a] * float(BLEED_PX)));
+        colourBleed = colourBleed || mtvdStencil(q + b) > 0.5 || mtvdStencil(q - b) > 0.5;
+      }
+    }
     if (zs != z || edge) {
       z = zs;
       dx = 0.0;   // facing the camera: its real slope is unknown
@@ -154,7 +175,7 @@ MtvdSample mtvdSample(ivec2 q, float cell) {
     }
     edge = false;
   }
-  s.ok = z > uRange.x + 0.05 && z < uMaxDepth && !(edge && uEdgeMode == 1);
+  s.ok = z > uRange.x + 0.05 && z < uMaxDepth && !(edge && uEdgeMode == 1) && !colourBleed;
 
   vec2 uv = (vec2(q) + 0.5) / vec2(QW, QH);
   vec3 c = mtvdCamPos(uv, z);
@@ -177,7 +198,7 @@ float mtvdHash(vec2 p) {
   p += dot(p, p.yx + 33.33);
   return fract((p.x + p.y) * p.x);
 }
-`,Fe=class e{static async load(t,{fps:n}={}){let r=await fetch(t+`.json`);if(!r.ok)throw Error(`sidecar ${t}.json: HTTP ${r.status}`);let i=await r.json(),a=new e(i,t+`.mp4`);return await a.ready,a}constructor(e,t){this.side=e,this.fps=e.fps,this.frames=e.frames,this.duration=e.frames/e.fps,this.frame=0,this.serial=0,this.onFrame=null;let n=document.createElement(`video`);n.muted=!0,n.loop=!0,n.playsInline=!0,n.preload=`auto`,n.setAttribute(`playsinline`,``),n.src=t,this.video=n;let r=new h(n);if(r.colorSpace=``,r.minFilter=_,r.magFilter=_,r.generateMipmaps=!1,this.texture=r,this.camToWorld=new pe,this.uniforms={uFrame:{value:r},uCamToWorld:{value:this.camToWorld},uRay:{value:new re},uRange:{value:new b(.2,10)}},this._p=new y,this._q=new c,this._s=new y(1,1,1),this.setFrame(0),this.ready=new Promise((e,r)=>{n.addEventListener(`loadeddata`,()=>e(),{once:!0}),n.addEventListener(`error`,()=>r(Error(`video ${t}: ${n.error?.message||`failed to load`}`)),{once:!0})}),`requestVideoFrameCallback`in n){let e=(t,r)=>{this._present(Math.round(r.mediaTime*this.fps)),n.requestVideoFrameCallback(e)};n.requestVideoFrameCallback(e),this.hasFrameCallback=!0}else this.hasFrameCallback=!1}poll(){if(this.hasFrameCallback)return;let e=Math.floor(this.video.currentTime*this.fps+.25);e!==this.frame&&this._present(e)}_present(e){this.setFrame(e),this.serial++,this.onFrame?.(this.frame)}setFrame(e){let t=this.side;e=Math.min(Math.max(e,0),this.frames-1),this.frame=e,this.pose(e,this.camToWorld);let n=Math.tan(t.fov[e]/2);this.uniforms.uRay.value.set(t.shift[2*e],t.shift[2*e+1],n*16/9,n),this.uniforms.uRange.value.set(t.range[2*e],t.range[2*e+1])}pose(e,t=new pe){let n=this.side;return this._p.fromArray(n.p,3*e),this._q.fromArray(n.q,4*e),t.compose(this._p,this._q,this._s)}fovDeg(e){return i.radToDeg(this.side.fov[e])}seekFrame(e){e=Math.min(Math.max(e,0),this.frames-1),this.video.currentTime=(e+.5)/this.fps}dispose(){this.video.pause(),this.video.removeAttribute(`src`),this.video.load(),this.texture.dispose()}},T={OPAQUE:0,DEPTH:1,ACCUM:2},Ie=[`PASS_OPAQUE`,`PASS_DEPTH`,`PASS_ACCUM`],Le=`vec4(0.0, 0.0, -2.0, 1.0)`;function Re(){return{uMaxDepth:{value:8},uEdge:{value:8},uCurve:{value:.15},uEdgeMode:{value:2},uWhy:{value:0},uSize:{value:1},uSharp:{value:2.5},uProjScale:{value:500},uPeople:{value:new re(1,1,1,1)},uDepthBias:{value:.015},uOpacity:{value:1}}}var ze=`
+`,Fe=class e{static async load(t,{fps:n}={}){let r=await fetch(t+`.json`);if(!r.ok)throw Error(`sidecar ${t}.json: HTTP ${r.status}`);let i=await r.json(),a=new e(i,t+`.mp4`);return await a.ready,a}constructor(e,t){this.side=e,this.fps=e.fps,this.frames=e.frames,this.duration=e.frames/e.fps,this.frame=0,this.serial=0,this.onFrame=null;let n=document.createElement(`video`);n.muted=!0,n.loop=!0,n.playsInline=!0,n.preload=`auto`,n.setAttribute(`playsinline`,``),n.src=t,this.video=n;let r=new h(n);if(r.colorSpace=``,r.minFilter=_,r.magFilter=_,r.generateMipmaps=!1,this.texture=r,this.camToWorld=new pe,this.uniforms={uFrame:{value:r},uCamToWorld:{value:this.camToWorld},uRay:{value:new re},uRange:{value:new b(.2,10)}},this._p=new y,this._q=new c,this._s=new y(1,1,1),this.setFrame(0),this.ready=new Promise((e,r)=>{n.addEventListener(`loadeddata`,()=>e(),{once:!0}),n.addEventListener(`error`,()=>r(Error(`video ${t}: ${n.error?.message||`failed to load`}`)),{once:!0})}),`requestVideoFrameCallback`in n){let e=(t,r)=>{this._present(Math.round(r.mediaTime*this.fps)),n.requestVideoFrameCallback(e)};n.requestVideoFrameCallback(e),this.hasFrameCallback=!0}else this.hasFrameCallback=!1}poll(){if(this.hasFrameCallback)return;let e=Math.floor(this.video.currentTime*this.fps+.25);e!==this.frame&&this._present(e)}_present(e){this.setFrame(e),this.serial++,this.onFrame?.(this.frame)}setFrame(e){let t=this.side;e=Math.min(Math.max(e,0),this.frames-1),this.frame=e,this.pose(e,this.camToWorld);let n=Math.tan(t.fov[e]/2);this.uniforms.uRay.value.set(t.shift[2*e],t.shift[2*e+1],n*16/9,n),this.uniforms.uRange.value.set(t.range[2*e],t.range[2*e+1])}pose(e,t=new pe){let n=this.side;return this._p.fromArray(n.p,3*e),this._q.fromArray(n.q,4*e),t.compose(this._p,this._q,this._s)}fovDeg(e){return i.radToDeg(this.side.fov[e])}seekFrame(e){e=Math.min(Math.max(e,0),this.frames-1);let t=Number.isFinite(this.video.duration)?this.video.duration-.004:1/0;this.video.currentTime=Math.min((e+.3)/this.fps,t)}dispose(){this.video.pause(),this.video.removeAttribute(`src`),this.video.load(),this.texture.dispose()}},T={OPAQUE:0,DEPTH:1,ACCUM:2},Ie=[`PASS_OPAQUE`,`PASS_DEPTH`,`PASS_ACCUM`],Le=`vec4(0.0, 0.0, -2.0, 1.0)`;function Re(){return{uMaxDepth:{value:8},uEdge:{value:8},uCurve:{value:.15},uEdgeMode:{value:2},uWhy:{value:0},uSize:{value:1},uSharp:{value:2.5},uProjScale:{value:500},uPeople:{value:new re(1,1,1,1)},uDepthBias:{value:.015},uOpacity:{value:1}}}var ze=`
 in vec3 vColor;
 in float vWeight;
 #ifdef PRIM_SURFEL
@@ -267,6 +288,10 @@ void main() {
   MtvdSample s = mtvdSample(q, float(uStep));
   bool person = s.stencil > 0.5;
   bool want = uWho == 2 || ((uWho == 1) == person);
+  // The room memory keeps only what is surely room: next to a silhouette the
+  // colour is often still the person's, and kept for the whole clip that
+  // draws dark outlines of everyone onto the walls.
+  if (uWho == 0 && (s.edge || s.boundary)) want = false;
   if (!s.ok || !want) { gl_FragColor = vec4(0.0); return; }
   vec3 c = floor(clamp(mtvdColor(s.uv), 0.0, 1.0) * 255.0 + 0.5);
   float packed = c.r * 65536.0 + c.g * 256.0 + c.b + 1.0;

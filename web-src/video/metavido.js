@@ -90,6 +90,7 @@ struct MtvdSample {
   float slope;    // tan of the angle between surface normal and view ray
   vec2 uv;
   bool edge;      // on a depth ramp (before uEdgeMode is applied)
+  bool boundary;  // within BOUNDARY_PX of a stencil edge
   bool ok;
 };
 
@@ -121,8 +122,13 @@ const int EDGE_PX = 4;
 const int CURVE_PX = 12;
 const vec2 SNAP_DIRS[8] = vec2[8](vec2(1.0, 0.0), vec2(0.7071, 0.7071), vec2(0.0, 1.0), vec2(-0.7071, 0.7071),
                                   vec2(-1.0, 0.0), vec2(-0.7071, -0.7071), vec2(0.0, -1.0), vec2(0.7071, -0.7071));
-const float SNAP_R[4] = float[4](6.0, 14.0, 24.0, 36.0);
-float mtvdSnap(ivec2 q, float z, float stencil) {
+// The ring reaches 48 px: a background sample just outside a silhouette has to
+// look past the whole 30-40 px of ramp to find the wall behind.
+const float SNAP_R[4] = float[4](8.0, 18.0, 32.0, 48.0);
+// weak: the sample is only moderately steep. That is a ramp if a person is
+// near (they are what the ramps form around), and could equally be a floor
+// seen at a grazing angle if not, so then it is left alone.
+float mtvdSnap(ivec2 q, float z, float stencil, bool weak) {
   float zmin = 1e9, zmax = -1e9, pmin = 1e9, bmin = 1e9, bmax = -1e9;
   bool nearPerson = false;
   for (int r = 0; r < 4; r++) {
@@ -135,6 +141,7 @@ float mtvdSnap(ivec2 q, float z, float stencil) {
       else { bmin = min(bmin, zz); bmax = max(bmax, zz); }
     }
   }
+  if (weak && !nearPerson) return z;
   // A person sample is only moved if it sits clearly behind the person's
   // nearest depth around it (pulled back by the ramp), not for the few
   // centimetres a body curves away from the camera.
@@ -144,6 +151,7 @@ float mtvdSnap(ivec2 q, float z, float stencil) {
 }
 
 const int BOUNDARY_PX = 10;
+const int BLEED_PX = 5;      // how far the person's colour reaches past the stencil
 MtvdSample mtvdSample(ivec2 q, float cell) {
   MtvdSample s;
   float z = mtvdDepth(q);
@@ -165,7 +173,9 @@ MtvdSample mtvdSample(ivec2 q, float cell) {
     boundary = boundary || (mtvdStencil(q + b) > 0.5) != person || (mtvdStencil(q - b) > 0.5) != person;
   }
   bool edge = s.slope >= uEdge || curv >= uCurve;
+  bool weakEdge = !edge && s.slope >= 0.5 * uEdge;
   s.edge = edge;
+  s.boundary = boundary;
   // Geometry from central differences, and the depth itself lightly smoothed
   // (a 5-tap plus): the hue encoding quantises depth to ~6 mm, which shows as
   // shingles on oblique surfaces otherwise. Planes are unaffected, being
@@ -175,8 +185,19 @@ MtvdSample mtvdSample(ivec2 q, float cell) {
   // Person samples near their silhouette are checked even when they look
   // smooth: the ramp bleeds a few pixels into the stencil, and a gentle start
   // of it passes both tests. Background samples are only moved when on a ramp.
-  if (uEdgeMode == 2 && (edge || (boundary && person))) {
-    float zs = mtvdSnap(q, z, s.stencil);
+  bool colourBleed = false;
+  if (uEdgeMode == 2 && (edge || weakEdge || (boundary && person))) {
+    float zs = mtvdSnap(q, z, s.stencil, !edge);
+    // A background sample right outside a silhouette, moved back onto the
+    // wall, still has the person's colour (the stencil sits a few pixels
+    // inside the person in the colour image): left in, it paints a dark
+    // outline of everyone onto the wall. Those few are dropped instead.
+    if (!person && boundary && zs > z + 0.2) {
+      for (int a = 0; a < 4; a++) {
+        ivec2 b = ivec2(round(SNAP_DIRS[a] * float(BLEED_PX)));
+        colourBleed = colourBleed || mtvdStencil(q + b) > 0.5 || mtvdStencil(q - b) > 0.5;
+      }
+    }
     if (zs != z || edge) {
       z = zs;
       dx = 0.0;   // facing the camera: its real slope is unknown
@@ -184,7 +205,7 @@ MtvdSample mtvdSample(ivec2 q, float cell) {
     }
     edge = false;
   }
-  s.ok = z > uRange.x + 0.05 && z < uMaxDepth && !(edge && uEdgeMode == 1);
+  s.ok = z > uRange.x + 0.05 && z < uMaxDepth && !(edge && uEdgeMode == 1) && !colourBleed;
 
   vec2 uv = (vec2(q) + 0.5) / vec2(QW, QH);
   vec3 c = mtvdCamPos(uv, z);
@@ -320,8 +341,10 @@ export class Clip {
 
   seekFrame(f) {
     f = Math.min(Math.max(f, 0), this.frames - 1);
-    // Aim at the middle of the frame's display interval.
-    this.video.currentTime = (f + 0.5) / this.fps;
+    // Aim a little into the frame's display interval, and never at or past the
+    // end, where a looping video would wrap to frame 0.
+    const end = Number.isFinite(this.video.duration) ? this.video.duration - 0.004 : Infinity;
+    this.video.currentTime = Math.min((f + 0.3) / this.fps, end);
   }
 
   dispose() {
