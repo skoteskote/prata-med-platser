@@ -47,7 +47,7 @@ say "total: $(human_size "$WEB")"
 say ""
 say "+ offline check (no external loads in the built viewer)"
 HITS=$(grep -ohE "<(script|link|img|source|video|audio|iframe|embed|object|track)\b[^>]*(src|href|data)=[\"'][^\"']*https?://[^\"']*|fetch\([\"']https?://|importScripts\([\"']https?://|new Worker\([\"']https?://|@import[^;]*https?://" \
-  "$WEB/index.html" "$WEB/map/index.html" "$WEB/app/"*.js "$WEB/app/"*.css 2>/dev/null)
+  "$WEB/index.html" "$WEB/map/index.html" "$WEB/video/index.html" "$WEB/app/"*.js "$WEB/app/"*.css 2>/dev/null)
 if [ -n "$HITS" ]; then
   say "  FAIL - the viewer would load from the network:"
   echo "$HITS" | sed 's/^/    /' | tee -a "$STAGE_LOG"

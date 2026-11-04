@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<!-- An exploration, not a public page yet: unlinked, and out of search. -->
+<meta name="robots" content="noindex, nofollow">
+<title>Volymetrisk video — Prata med platser</title>
+<link rel="icon" href="../assets/favicon.png">
+<link rel="stylesheet" href="./video.css">
+</head>
+<body>
+
+<canvas id="view" aria-label="Volymetrisk video från workshoppen, i 3D"></canvas>
+
+<header id="topbar">
+  <a class="brand" href="../" aria-label="Prata med platser – till startsidan">Prata med platser</a>
+  <p id="caption"></p>
+</header>
+
+<aside id="panel" aria-label="Visning">
+  <div class="group" role="radiogroup" aria-label="Utseende" id="looks">
+    <button type="button" data-look="punkter" role="radio">Punkter</button>
+    <button type="button" data-look="mjuk" role="radio">Mjuka splats</button>
+    <button type="button" data-look="ytor" role="radio">Ytor</button>
+  </div>
+  <div class="group" id="toggles">
+    <button type="button" data-toggle="people" aria-pressed="false" title="Människorna täta och ljusa, rummet glest och dämpat">Människor i fokus</button>
+    <button type="button" data-toggle="memory" aria-pressed="false" title="Rummet fylls i av allt kameran har sett under klippet">Rummet minns</button>
+    <button type="button" data-toggle="trails" aria-pressed="false" title="Rörelserna lämnar spår">Spår</button>
+    <button type="button" data-toggle="camera" aria-pressed="true" title="Visa telefonen som filmade (C)">Kameran</button>
+    <button type="button" id="edges" title="Djupkanterna: skärpta mot människornas kontur, bortklippta, eller råa (gummiduken mellan förgrund och bakgrund)">Kanter: skärpta</button>
+  </div>
+  <div class="group" id="views">
+    <button type="button" id="follow" aria-pressed="false" title="Se genom telefonen som filmade (F)">Genom kameran</button>
+    <button type="button" id="reset" title="Tillbaka till startvyn (R)">Startvy</button>
+  </div>
+</aside>
+
+<div id="transport">
+  <button type="button" id="play" aria-label="Pausa">❚❚</button>
+  <input id="scrub" type="range" min="0" max="1" step="1" value="0" aria-label="Tid i klippet">
+  <span id="time">0:00</span>
+  <button type="button" id="speed" title="Uppspelningshastighet">1×</button>
+  <button type="button" id="loop" aria-pressed="true" title="Spela i loop">Loop</button>
+</div>
+
+<p id="hint">Dra för att rotera · högerklick eller två fingrar för att flytta · scrolla eller nyp för att zooma</p>
+<p id="stats" aria-hidden="true"></p>
+<pre id="debug" hidden></pre>
+
+<div id="loading"><p>Laddar volymetrisk video…</p></div>
+
+<noscript>
+  <p class="noscript">Den här sidan behöver JavaScript och WebGL 2.</p>
+</noscript>
+
+<script type="module" src="./video.js"></script>
+</body>
+</html>
