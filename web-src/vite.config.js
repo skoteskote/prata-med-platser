@@ -11,7 +11,7 @@ import { createReadStream, statSync } from "node:fs";
 //   index.html  the splat viewer
 //   map/        the workshop drawing sheet, kept a separate entry so it never
 //               pulls in three.js or the 30 MB splat
-//   video/      the volumetric (Metavido) video viewer: three.js, never Spark
+//   workshop1/  the volumetric (Metavido) video viewer: three.js, never Spark
 //               or the splat
 
 // The heavy assets (scene.sog, the Metavido clips and their sidecars) are
@@ -67,7 +67,7 @@ export default defineConfig({
       input: {
         main: resolve(import.meta.dirname, "index.html"),
         map: resolve(import.meta.dirname, "map/index.html"),
-        video: resolve(import.meta.dirname, "video/index.html"),
+        workshop1: resolve(import.meta.dirname, "workshop1/index.html"),
       },
       output: {
         entryFileNames: "app/[name].js",

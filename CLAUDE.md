@@ -148,14 +148,14 @@ splatten. Länkas inte från menyn och är `noindex`.
   som webp (~160 kB), tryckversion som jpg (4200 px = 180 dpi) som bara hämtas
   när någon trycker Spara.
 
-### Volymetrisk video (`/video/`)
+### Volymetrisk video (`/workshop1/`)
 
 Workshop-inspelningar (Metavido, iPhone) som levande 3D i webbläsaren. Egen
 Vite-ingång som `/map/`: three.js men aldrig Spark eller splatten. Olänkad och
 `noindex`. Bakgrund och beslut i `METAVIDO.md`, vad som byggdes och hur det
 står till i `METAVIDO_VIEWER_NOTES.md`.
 
-- **`web-src/video/`** — `metavido.js` avkodar ruta för ruta på GPU:n
+- **`web-src/workshop1/`** — `metavido.js` avkodar ruta för ruta på GPU:n
   (djup, stencil, färg, kantskärpning), `layers.js` ritar (punkter, splats,
   rummets minne, spår), `video.js` är sidan.
 - **Klippen** ligger i `web/assets/video/` och går aldrig genom Vite. Görs med
