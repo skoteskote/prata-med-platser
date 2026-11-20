@@ -151,8 +151,8 @@ splatten. Länkas inte från menyn och är `noindex`.
 ### Volymetrisk video (`/workshop1/`)
 
 Workshop-inspelningar (Metavido, iPhone) som levande 3D i webbläsaren. Egen
-Vite-ingång som `/map/`: three.js men aldrig Spark eller splatten. Olänkad och
-`noindex`. Bakgrund och beslut i `METAVIDO.md`, vad som byggdes och hur det
+Vite-ingång som `/map/`: three.js men aldrig Spark eller splatten. Länkad från
+menyn ("Workshop 1"), men `noindex` — den ska visas, inte hittas via sök. Bakgrund och beslut i `METAVIDO.md`, vad som byggdes och hur det
 står till i `METAVIDO_VIEWER_NOTES.md`.
 
 - **`web-src/workshop1/`** — `metavido.js` avkodar ruta för ruta på GPU:n
